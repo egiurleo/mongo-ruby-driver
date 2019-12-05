@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require 'net/http'
+require 'uri'
+require 'socket'
+require 'openssl'
 
 module Mongo
   module Crypt
@@ -84,18 +86,21 @@ module Mongo
       end
 
       # TODO: documentation
-      def kms_connection(endpoint, message)
-        uri = URI(endpoint)
-        begin
-          Net::HTTP.start(uri.host, uri.port) do |http|
-            request = Net::HTTP::Get.new(uri.request_uri)
+      def feed_kms(kms_helper)
+        endpoint = kms_helper.endpoint
+        message = kms_helper.message
 
-            http.request(request) do |response|
-              response.socket.read(100)
-            end
-          end
-        rescue IOError
-          # ignore
+        uri = URI(endpoint)
+
+        # ssl_socket = Socket::SSL.new(uri.to_s, uri.port, uri.host, 10, Socket::PF_INET6, { connect_timeout: 10 })
+        socket = TCPSocket.open(uri.host, uri.port)
+        ssl_context = OpenSSL::SSL::SSLContext.new()
+        ssl_socket = OpenSSL::SSL::SSLSocket.new(socket, ssl_context)
+        ssl_socket.connect
+
+        ssl_socket.puts(message)
+        while bytes_needed = kms_helper.bytes_needed > 0 do
+          kms_helper.feed(ssl_socket.sysread(bytes_needed))
         end
       end
     end

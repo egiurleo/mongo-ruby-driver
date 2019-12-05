@@ -95,11 +95,10 @@ module Mongo
             mongo_done
           when :need_kms
             while kms_helper = next_kms_helper do
-              message = kms_helper.message
-              endpoint = kms_helper.endpoint
-
-              conn = @encryption_io.kms_connection(endpoint, message)
+              @encryption_io.feed_kms(kms_helper)
             end
+
+            kms_done
           else
             raise("State #{state} is not supported by Mongo::Crypt::Context")
           end
@@ -156,6 +155,11 @@ module Mongo
       def next_kms_helper
         kms_ctx = Binding.mongocrypt_ctx_next_kms_ctx(@ctx)
         kms_ctx == FFI::Pointer::NULL ? nil : KMSHelper.new(kms_ctx)
+      end
+
+      def kms_done
+        success = Binding.mongocrypt_ctx_kms_done(@ctx)
+        raise_from_status unless success
       end
     end
   end
