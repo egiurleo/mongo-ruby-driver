@@ -87,8 +87,19 @@ module Mongo
 
             mongo_done
           when :need_mongo_markings
-          when :need_kms
+            cmd = Hash.from_bson(BSON::ByteBuffer.new(mongo_operation))
 
+            result = @encryption_io.mark_command(cmd)
+            mongo_feed(result.to_bson.to_s)
+
+            mongo_done
+          when :need_kms
+            while kms_helper = next_kms_helper do
+              message = kms_helper.message
+              endpoint = kms_helper.endpoint
+
+              conn = @encryption_io.kms_connection(endpoint, message)
+            end
           else
             raise("State #{state} is not supported by Mongo::Crypt::Context")
           end
@@ -139,6 +150,12 @@ module Mongo
       # TODO: documentation
       def mongo_done
         Binding.mongocrypt_ctx_mongo_done(@ctx)
+      end
+
+      # TODO: documentation
+      def next_kms_helper
+        kms_ctx = Binding.mongocrypt_ctx_next_kms_ctx(@ctx)
+        kms_ctx == FFI::Pointer::NULL ? nil : KMSHelper.new(kms_ctx)
       end
     end
   end

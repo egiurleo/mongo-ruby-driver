@@ -16,7 +16,7 @@ module Mongo
   module Crypt
 
     # TODO: documentation
-    class KMSContext
+    class KMSHelper
       # TODO: documentation
       def initialize(kms_ctx)
         # FFI::MemoryPointer automatically frees memory when it goes out of scope
@@ -40,7 +40,7 @@ module Mongo
         success = Binding.mongocrypt_kms_ctx_message(@kms_ctx, binary.ref)
         raise_from_status unless success
 
-        binary
+        binary.to_s
       end
 
       # TODO: documentation
