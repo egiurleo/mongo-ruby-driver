@@ -30,7 +30,9 @@ module Mongo
       #
       # @note This class expects that the key_vault_client and key_vault_namespace
       #   options are not nil and are in the correct format
-      def initialize(key_vault_client, key_vault_namespace)
+      def initialize(client, key_vault_client, key_vault_namespace)
+        @client = client
+
         key_vault_db_name, key_vault_collection_name = key_vault_namespace.split('.')
         @collection = key_vault_client.use(key_vault_db_name)[key_vault_collection_name]
       end
@@ -52,6 +54,13 @@ module Mongo
       # @return [ Mongo::Operation::Insert::Result ] The insertion result
       def insert(document)
         @collection.insert_one(document)
+      end
+
+      # TODO: documentation
+      def collection_info(filter)
+        raise "This is bad" unless @client
+
+        @client.list_collections(filter).to_a
       end
     end
   end

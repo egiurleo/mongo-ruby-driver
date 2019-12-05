@@ -78,17 +78,19 @@ module Mongo
               mongo_feed(key.to_bson.to_s) if key
             end
 
-            Binding.mongocrypt_ctx_mongo_done(@ctx)
+            mongo_done
+          when :need_mongo_collinfo
+            filter = Hash.from_bson(BSON::ByteBuffer.new(mongo_operation))
+
+            result = @encryption_io.collection_info(filter).first
+            mongo_feed(result.to_bson.to_s)
+
+            mongo_done
+          when :need_mongo_markings
+          when :need_kms
+
           else
-            # There are three other states to handle:
-            # - :need_mongo_collinfo
-            # - :need_mongo_markings
-            # - :need_kms
-            #
-            # None of these are required for explicit encryption/decryption,
-            # so these parts of the state machine will be implemented
-            # later
-            raise("State #{state} is not yet supported by Mongo::Crypt::Context")
+            raise("State #{state} is not supported by Mongo::Crypt::Context")
           end
         end
       end
@@ -132,6 +134,11 @@ module Mongo
         success = Binding.mongocrypt_ctx_mongo_feed(@ctx, binary.ref)
 
         raise_from_status unless success
+      end
+
+      # TODO: documentation
+      def mongo_done
+        Binding.mongocrypt_ctx_mongo_done(@ctx)
       end
     end
   end

@@ -18,6 +18,7 @@ module Mongo
     autoload(:Binary, 'mongo/crypt/binary')
     autoload(:Status, 'mongo/crypt/status')
     autoload(:Handle, 'mongo/crypt/handle')
+    autoload(:KMSHelper, 'mongo/crypt/kms_helper')
     autoload(:Context, 'mongo/crypt/context')
     autoload(:DataKeyContext, 'mongo/crypt/data_key_context')
     autoload(:ExplicitEncryptionContext, 'mongo/crypt/explicit_encryption_context')
