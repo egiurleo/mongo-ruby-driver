@@ -110,6 +110,11 @@ module Mongo
       # indicating the success of the operation.
       attach_function :mongocrypt_setopt_kms_provider_local, [:pointer, :pointer], :bool
 
+      # Takes a pointer to a mongocrypt_object, a string representing the AWS access key,
+      # an integer (pass -1), another string representing the AWS secret key, and another
+      # integer (pass -1). Returns a boolean indicating the success of the operation.
+      attach_function :mongocrypt_setopt_kms_provider_aws, [:pointer, :string, :int, :string, :int], :bool
+
       # Takes a pointer to a mongocrypt_t object and initializes that object.
       # Should be called after mongocrypt_setopt_kms_provider_local and other methods that
       # set options on the mongocrypt_t object.
@@ -140,6 +145,11 @@ module Mongo
       # Returns a boolean indicating the success of the operation
       attach_function :mongocrypt_ctx_setopt_masterkey_local, [:pointer], :bool
 
+      # Takes a pointer to a mongocrypt_ctx_t object, a string representing the AWS region,
+      # an integer (pass -1), another string representing the ARN of the master key, and another
+      # integer (pass -1). Returns a boolean indicating the success of the operation.
+      attach_function :mongocrypt_ctx_setopt_masterkey_aws, [:pointer, :string, :int, :string, :int], :bool
+
       # Takes a pointer to a mongocrypt_ctx_t object and initializes the
       # state machine in order to create a data key
       # Returns a boolean indiating the success of the operation
@@ -166,6 +176,16 @@ module Mongo
       # object that wraps the value to be decrypted. Initializes the state machine for
       # explicit decryption. Returns a boolean indicating the success of the operation.
       attach_function :mongocrypt_ctx_explicit_decrypt_init, [:pointer, :pointer], :bool
+
+      # Takes a pointer to a mongocrypt_ctx_t object, the string name of the database against which
+      # the command is being run, the length of the database name as an integer, and a pointer
+      # to a mongocrypt_binary_t object wrapping the command to be encrypted. Initializes
+      # the mongocrypt_ctx_t object for auto-encryption and returns a boolean indicating the
+      # success of the operation.
+      attach_function :mongocrypt_ctx_encrypt_init, [:pointer, :string, :int, :pointer], :bool
+
+      # TODO: documentation
+      attach_function :mongocrypt_ctx_decrypt_init, [:pointer, :pointer], :bool
 
       # Takes a pointer to a mongocrypt_ctx_t object and destroys
       # the reference to that object
@@ -209,6 +229,44 @@ module Mongo
       #
       # This method is not currently unit tested.
       attach_function :mongocrypt_ctx_mongo_done, [:pointer], :bool
+
+      # Takes a pointer to a mongocrypt_ctx_t object and returns a pointer to
+      # a new mongocrypt_kms_ctx_t object or NULL. The returned object can
+      # be used to perform a single HTTP request against the KMS.
+      attach_function :mongocrypt_ctx_next_kms_ctx, [:pointer], :pointer
+
+      # Takes a pointer to a mongocrypt_kms_ctx_t object and a pointer to
+      # a mongocrypt_binary_t object as an out paramter. Gets the HTTP request
+      # message for the KMS handle and writes it to the binary object. Returns
+      # a boolean indicating the success of the operation.
+      attach_function :mongocrypt_kms_ctx_message, [:pointer, :pointer], :bool
+
+      # Takes a pointer to a monogcrypt_kms_ctx_t object and a pointer to
+      # a string as an out parameter. Gets the HTTP request endpoint for
+      # the KMS context and writes it to the string. Returns a boolean indicating
+      # the success of the operation.
+      attach_function :mongocrypt_kms_ctx_endpoint, [:pointer, :pointer], :bool
+
+      # Takes a pointer to a mongocrypt_kms_ctx_t object and returns an integer
+      # representing the number of bytes of data needed by the object.
+      attach_function :mongocrypt_kms_ctx_bytes_needed, [:pointer], :int
+
+      # Takes a pointer to a mongocrypt_kms_ctx_t object and a pointer to a
+      # mongocrypt_binary_t object. Feeds the bytes from the binary object into
+      # the mongocrypt_kms_ctx_t object, and returns a boolean indicating
+      # success of the operation.
+      attach_function :mongocrypt_kms_ctx_feed, [:pointer, :pointer], :bool
+
+      # Takes a pointer to a mongocrypt_kms_ctx_t object and a pointer to a
+      # mongocrypt_status_t object as an out parameter. Gets the status of
+      # the mongocrypt_kms_ctx_t and writes it to the provided status. Returns
+      # a boolean indicating the success of the operation.
+      attach_function :mongocrypt_kms_ctx_status, [:pointer, :pointer], :bool
+
+      # Takes a pointer to a mongocrypt_ctx_t object. Indicates that this object
+      # has finished handling all mongocrypt_kms_ctx_t objects, and returns a boolean
+      # indicating the success of the operation.
+      attach_function :mongocrypt_ctx_kms_done, [:pointer], :bool
 
       # Takes a pointer to a mongocrypt_ctx_t object and an out param,
       # which is a pointer to a mongocrypt_binary_t object, which will serve
