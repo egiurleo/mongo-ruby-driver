@@ -63,6 +63,8 @@ module Mongo
                                 monitoring_io: mongocryptd_client_monitoring_io,
                               )
 
+        @encryption_io = EncryptionIO.new(self, @mongocryptd_client, options[:key_vault_client], options[:key_vault_namespace])
+
         # TODO: use all the other options for auto-encryption/auto-decryption
       end
 
