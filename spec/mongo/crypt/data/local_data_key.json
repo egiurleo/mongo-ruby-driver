@@ -1,0 +1,16 @@
+{
+  "_id": {
+    "$binary": "NL78Kid0Trizeb66DJlUlQ==",
+    "$type": "uuid"
+  },
+  "keyMaterial": {
+    "$binary": "DjVwRAz9HrikGX3zEwdoUZx3SHaerv8nB3qKQe63/NJ/Na1TnMqMqLkU9wL/\n5z/aAKz8aw4uzSvPFgjCELpKgmKP9Ki5ZHLa1O/F/TPKqkPYdxlg+rOKSmuD\nCO8DVAvBhktWygEfak+mJVlg4Z0bYeoKQcnIEOokkLRUTBiBx/PR1jSjhxWa\ntMZ+F4eeiXigMg1FCI/HI1FTxM9OX8Uq3g==\n",
+    "$type": "generic"
+  },
+  "creationDate": "2019-12-06 17:51:07 UTC",
+  "updateDate": "2019-12-06 17:51:07 UTC",
+  "status": 0,
+  "masterKey": {
+    "provider": "local"
+  }
+}
