@@ -103,6 +103,16 @@ module Mongo
         true
       end
 
+      # TODO: documentation
+      def encrypt(database_name, command)
+        EncryptionContext.new(
+          @crypt_handle,
+          @encryption_io,
+          database_name,
+          command
+        ).run_state_machine
+      end
+
       private
 
       # Sets the following default options:

@@ -17,14 +17,17 @@ module Mongo
 
     # A Context object initialized for auto encryption
     class EncryptionContext < Context
+      include Mongo::GridFS::Convertible
 
       # TODO: documentation
-      def initialize(mongocrypt, io, db_name, cmd, options = {})
+      def initialize(mongocrypt, io, db_name, cmd)
         super(mongocrypt, io)
 
         @db_name = db_name
         @cmd = cmd
+        @options = options
 
+        set_schema_map
         initialize_ctx
       end
 

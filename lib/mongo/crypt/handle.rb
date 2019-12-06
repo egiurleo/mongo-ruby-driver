@@ -14,6 +14,8 @@
 
 require 'ffi'
 require 'base64'
+require_relative '../../../spec/runners/crud'
+
 
 module Mongo
   module Crypt
@@ -31,7 +33,7 @@ module Mongo
       # encoded string.
       #
       # There will be more arguemnts to this method once automatic encryption is introduced.
-      def initialize(kms_providers)
+      def initialize(kms_providers, schema_map)
         # FFI::AutoPointer uses a custom release strategy to automatically free
         # the pointer once this object goes out of scope
         @mongocrypt = FFI::AutoPointer.new(
@@ -40,6 +42,7 @@ module Mongo
         )
 
         set_kms_providers(kms_providers)
+        set_schema_map(schema_map) if schema_map
         initialize_mongocrypt
       end
 
@@ -99,6 +102,14 @@ module Mongo
         end
 
         # TODO: Set the AWS kms provider on the underlying mongocrypt_t object
+      end
+
+      def set_schema_map(schema_map)
+        converter = Mongo::CRUD::CRUDTest::DataConverter.new
+        schema_map = converter.transform_docs([schema_map]).first.to_bson.to_s
+
+        binary = Binary.new(schema_map)
+        success = Binding.mongocrypt_setopt_schema_map(@mongocrypt, binary.ref)
       end
 
       # Initialize the underlying mongocrypt_t object and raise an error if the operation fails

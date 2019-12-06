@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'base64'
+require 'json'
 
 describe 'Auto Encryption' do
   require_libmongocrypt
@@ -8,7 +9,7 @@ describe 'Auto Encryption' do
 
   context 'with local KMS provider' do
     it 'encrypts a command inserted into the database' do
-      schema_map = File.read('spec/mongo/crypt/data/schema_map.json')
+      schema_map = JSON.parse(File.read('spec/mongo/crypt/data/schema_map.json'))
 
       auto_encryption_options = {
         kms_providers: { local: { key: Base64.encode64("ru\xfe\x00" * 24) } },
