@@ -33,8 +33,8 @@ describe Mongo::Crypt::EncryptionContext do
   end
 
   describe '#initialize' do
-    it 'does something?' do
-      context
+    it 'doesn\'t throw an error' do
+      expect { context }.not_to raise_error
     end
   end
 end
