@@ -535,10 +535,6 @@ module Mongo
     def insert_one(document, opts = {})
       client.send(:with_session, opts) do |session|
 
-        if client.encryption_options && !client.encryption_options[:bypass_auto_encryption]
-          document = client.encrypt(database.name, document)
-        end
-
         write_concern = write_concern_with_session(session)
         write_with_retry(session, write_concern) do |server, txn_num|
           Operation::Insert.new(

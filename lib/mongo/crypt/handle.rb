@@ -14,17 +14,19 @@
 
 require 'ffi'
 require 'base64'
-require_relative '../../../spec/runners/crud'
 
 
 module Mongo
   module Crypt
 
+    # module Converter
+
+    # end
+
     # A handle to the libmongocrypt library that wraps a mongocrypt_t object,
     # allowing clients to set options on that object or perform operations such
     # as encryption and decryption
     class Handle
-
       # Creates a new Handle object and initializes it with options
       #
       # @param [ Hash ] kms_providers A hash of KMS settings. The only supported key
@@ -105,8 +107,7 @@ module Mongo
       end
 
       def set_schema_map(schema_map)
-        converter = Mongo::CRUD::CRUDTest::DataConverter.new
-        schema_map = converter.transform_docs([schema_map]).first.to_bson.to_s
+        schema_map = schema_map.to_bson.to_s
 
         binary = Binary.new(schema_map)
         success = Binding.mongocrypt_setopt_schema_map(@mongocrypt, binary.ref)

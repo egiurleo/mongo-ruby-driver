@@ -42,6 +42,12 @@ module Mongo
         end
 
         def message(server)
+          command = command(server)
+
+          # if client.encryption_options && !client.encryption_options[:bypass_auto_encryption]
+          #   command = client.encrypt(database.name, command)
+          # end
+
           section = { type: 1, payload: { identifier: IDENTIFIER, sequence: send(IDENTIFIER) } }
           Protocol::Msg.new(flags, { validating_keys: true }, command(server), section)
         end

@@ -17,7 +17,7 @@ module Mongo
 
     # This module contains common functionality for convenience methods getting
     # various values from the spec.
-    #
+      #
     # @since 2.0.0
     module Specifiable
 

@@ -106,7 +106,7 @@ module Mongo
       # TODO: documentation
       def encrypt(database_name, command)
         EncryptionContext.new(
-          @crypt_handle,
+          @crypt_handle.ref,
           @encryption_io,
           database_name,
           command

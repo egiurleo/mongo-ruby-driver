@@ -53,6 +53,7 @@ module Mongo
       # Returns a Protocol::Message or nil
       def dispatch_message(server)
         server.with_connection do |connection|
+          byebug
           connection.dispatch([ build_message(server) ], operation_id)
         end
       end
