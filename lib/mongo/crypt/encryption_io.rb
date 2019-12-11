@@ -65,7 +65,7 @@ module Mongo
       def collection_info(filter)
         raise "This is bad" unless @client
 
-        @client.list_collections(filter).to_a
+        @client.database.list_collections(filter)
       end
 
       # TODO: documentation
@@ -82,7 +82,7 @@ module Mongo
           response = @mongocryptd_client.database.command(cmd)
         end
 
-        return response
+        return response.documents.first
       end
 
       # TODO: documentation

@@ -5,7 +5,7 @@ require 'json'
 describe 'Auto Encryption' do
   require_libmongocrypt
 
-  let(:client) { ClientRegistry.instance.new_local_client(['localhost:27017']) }
+  let(:unencrypted_client) { ClientRegistry.instance.new_local_client(['localhost:27017']) }
 
   context 'with local KMS provider' do
     it 'encrypts a command inserted into the database' do
@@ -18,9 +18,10 @@ describe 'Auto Encryption' do
       }
 
       client = new_local_client([SpecConfig.instance.addresses.first], { auto_encryption_options: auto_encryption_options })
-      client.use(:test)[:users].insert_one({ ssn: '123-456-7890' })
+      client.use(:test)[:users].insert_one({ name: 'Alan Turing', ssn: '123-456-7890' })
 
-      # TODO: Check that you can't get the value back with a different client
+      result = unencrypted_client.use(:test)[:users].find({ name: 'Alan Turing' })
+      expect(result.count).to eq(0)
     end
   end
 end

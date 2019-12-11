@@ -81,9 +81,10 @@ module Mongo
       # @return [ Array<Hash> ] Info for each collection in the database.
       #
       # @since 2.0.5
-      def list_collections
+      def list_collections(filter=nil)
         session = client.send(:get_session)
-        collections_info(session, ServerSelector.primary)
+        options = { filter: filter } if filter
+        collections_info(session, ServerSelector.primary, options)
       end
 
       # Create the new database view.

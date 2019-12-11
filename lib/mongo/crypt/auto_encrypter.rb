@@ -105,12 +105,14 @@ module Mongo
 
       # TODO: documentation
       def encrypt(database_name, command)
-        EncryptionContext.new(
+        result = EncryptionContext.new(
           @crypt_handle.ref,
           @encryption_io,
           database_name,
           command
         ).run_state_machine
+
+        Hash.from_bson(BSON::ByteBuffer.new(result))
       end
 
       private
