@@ -58,10 +58,11 @@ module Mongo
       # @api private
       #
       # @since 2.5.0
-      def initialize(flags, options, global_args, *sections)
+      def initialize(flags, options, global_args, client=nil, *sections)
         @flags = flags || []
         @options = options
         @global_args = global_args
+        @client = client
         @sections = [ { type: 0, payload: global_args } ] + sections
         @request_id = nil
         super
@@ -147,8 +148,10 @@ module Mongo
 
       private
 
-      def command
-        @command ||= global_args.dup.tap do |cmd|
+      def command(client = nil)
+        return @command if @command
+
+        command = global_args.dup.tap do |cmd|
           cmd.delete(DATABASE_IDENTIFIER)
           sections.each do |section|
             if section[:type] == 1
@@ -158,6 +161,15 @@ module Mongo
             end
           end
         end
+
+        if @client && @client.encryption_options && !@client.encryption_options[:bypass_auto_encryption]
+          db_name = global_args[DATABASE_IDENTIFIER]
+          @command = @client.encrypt(db_name, command)
+        else
+          @command = command
+        end
+
+        @command
       end
 
       def add_check_sum(buffer)

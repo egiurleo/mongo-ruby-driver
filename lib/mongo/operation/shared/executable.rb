@@ -22,7 +22,8 @@ module Mongo
 
       include ResponseHandling
 
-      def do_execute(server)
+      def do_execute(server, client=nil)
+        @client ||= client
         unpin_maybe(session) do
           add_error_labels do
             add_server_diagnostics(server) do
@@ -34,7 +35,8 @@ module Mongo
         end
       end
 
-      def execute(server)
+      def execute(server, client=nil)
+        @client ||= client
         do_execute(server).tap do |result|
           validate_result(result, server)
         end
@@ -53,7 +55,6 @@ module Mongo
       # Returns a Protocol::Message or nil
       def dispatch_message(server)
         server.with_connection do |connection|
-          byebug
           connection.dispatch([ build_message(server) ], operation_id)
         end
       end
