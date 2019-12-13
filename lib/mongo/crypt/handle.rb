@@ -111,6 +111,8 @@ module Mongo
 
         binary = Binary.new(schema_map)
         success = Binding.mongocrypt_setopt_schema_map(@mongocrypt, binary.ref)
+
+        raise_from_status unless success
       end
 
       # Initialize the underlying mongocrypt_t object and raise an error if the operation fails

@@ -61,6 +61,7 @@ module Mongo
         @mongocryptd_client = Client.new(
                                 @encryption_options[:mongocryptd_uri],
                                 monitoring_io: mongocryptd_client_monitoring_io,
+                                server_selection_timeout: 5,
                               )
 
         @encryption_io = EncryptionIO.new(self, @mongocryptd_client, options[:key_vault_client], options[:key_vault_namespace])
@@ -105,6 +106,7 @@ module Mongo
 
       # TODO: documentation
       def encrypt(database_name, command)
+        byebug
         result = EncryptionContext.new(
           @crypt_handle.ref,
           @encryption_io,
