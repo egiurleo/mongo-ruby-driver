@@ -23,6 +23,7 @@ describe 'Explicit Encryption' do
       )
 
       data_key_id = client_encryption.create_data_key
+      byebug
 
       encrypted = client_encryption.encrypt(
         value,

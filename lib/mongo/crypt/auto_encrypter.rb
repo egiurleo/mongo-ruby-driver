@@ -106,7 +106,6 @@ module Mongo
 
       # TODO: documentation
       def encrypt(database_name, command)
-        byebug
         result = EncryptionContext.new(
           @crypt_handle.ref,
           @encryption_io,
