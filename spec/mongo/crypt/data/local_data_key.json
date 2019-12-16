@@ -1,20 +1,18 @@
 {
   "_id": {
     "$binary": {
-      "base64": "NL78Kid0Trizeb66DJlUlQ==",
-      "subType": "04"
+        "base64": "YWFhYWFhYWFhYWFhYWFhYQ==",
+        "subType": "04"
     }
   },
   "keyMaterial": {
     "$binary": {
-      "base64": "DjVwRAz9HrikGX3zEwdoUZx3SHaerv8nB3qKQe63/NJ/Na1TnMqMqLkU9wL/\n5z/aAKz8aw4uzSvPFgjCELpKgmKP9Ki5ZHLa1O/F/TPKqkPYdxlg+rOKSmuD\nCO8DVAvBhktWygEfak+mJVlg4Z0bYeoKQcnIEOokkLRUTBiBx/PR1jSjhxWa\ntMZ+F4eeiXigMg1FCI/HI1FTxM9OX8Uq3g==\n",
+      "base64": "db27rshiqK4Jqhb2xnwK4RfdFb9JuKeUe6xt5aYQF4o62tS75b7B4wxVN499gND9UVLUbpVKoyUoaZAeA895OENP335b8n8OwchcTFqS44t+P3zmhteYUQLIWQXaIgon7gEgLeJbaDHmSXS6/7NbfDDFlB37N7BP/2hx1yCOTN6NG/8M1ppw3LYT3CfP6EfXVEttDYtPbJpbb7nBVlxD7w==",
       "subType": "00"
     }
   },
-  "creationDate": "2019-12-06 17:51:07 UTC",
-  "updateDate": "2019-12-06 17:51:07 UTC",
+  "creationDate": { "$date": { "$numberLong": "1564354142963" } },
+  "updateDate": { "$date": { "$numberLong": "1564354142963" } },
   "status": 0,
-  "masterKey": {
-    "provider": "local"
-  }
+  "masterKey": { "provider": "local" }
 }

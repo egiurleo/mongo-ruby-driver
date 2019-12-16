@@ -18,6 +18,8 @@ group :development, :testing do
 
   gem 'byebug', platforms: :mri
 
+  gem "bson", path: "/Users/emilygiurleo/bson-ruby"
+
   # for benchmark tests
   gem 'yajl-ruby', require: 'yajl', platforms: :mri
   gem 'celluloid', platforms: :mri, require: false

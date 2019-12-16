@@ -90,6 +90,7 @@ module Mongo
             cmd = Hash.from_bson(BSON::ByteBuffer.new(mongo_operation))
 
             result = @encryption_io.mark_command(cmd)
+            byebug
             mongo_feed(result.to_bson.to_s)
 
             mongo_done
