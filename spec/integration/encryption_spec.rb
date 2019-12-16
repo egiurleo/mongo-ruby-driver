@@ -60,7 +60,7 @@ describe 'Auto Encryption' do
         schema_map: { 'test.users' => new_json_schema }
       }
 
-      client = new_local_client([SpecConfig.instance.addresses.first], { write_concern: { w: :majority }, auto_encryption_options: auto_encryption_options })
+      client = new_local_client('mongodb://localhost:27017/test', { write_concern: { w: :majority }, auto_encryption_options: auto_encryption_options })
       result = client.use(:test)[:users].insert_one({ ssn: '123-456-7890' })
 
       result = unencrypted_client.use(:test)[:users].find({ name: 'Alan Turing' })

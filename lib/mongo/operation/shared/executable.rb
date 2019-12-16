@@ -49,7 +49,9 @@ module Mongo
       end
 
       def get_result(server)
-        result_class.new(dispatch_message(server))
+        r = dispatch_message(server)
+        # byebug
+        result_class.new(r)
       end
 
       # Returns a Protocol::Message or nil

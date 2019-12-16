@@ -165,7 +165,7 @@ module Mongo
         if @client && @client.encryption_options && !@client.encryption_options[:bypass_auto_encryption]
           db_name = global_args[:insert]
           @command = @client.encrypt(db_name, command)
-          byebug
+          # byebug
         else
           @command = command
         end

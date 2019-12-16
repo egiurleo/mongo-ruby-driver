@@ -65,7 +65,9 @@ module Mongo
       def collection_info(filter)
         raise "This is bad" unless @client
 
-        @client.database.list_collections(filter)
+        result = @client.database.list_collections
+        name = filter['name']
+        result.find { |r| r['name'] == name }
       end
 
       # TODO: documentation
@@ -83,7 +85,7 @@ module Mongo
           response = @mongocryptd_client.database.command(cmd)
         end
 
-        return response.documents.first
+        return response.first
       end
 
       # TODO: documentation

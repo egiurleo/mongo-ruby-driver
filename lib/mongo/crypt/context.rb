@@ -72,6 +72,7 @@ module Mongo
           when :done
             return nil
           when :need_mongo_keys
+            byebug
             filter = Hash.from_bson(BSON::ByteBuffer.new(mongo_operation))
 
             @encryption_io.find_keys(filter).each do |key|
@@ -82,7 +83,7 @@ module Mongo
           when :need_mongo_collinfo
             filter = Hash.from_bson(BSON::ByteBuffer.new(mongo_operation))
 
-            result = @encryption_io.collection_info(filter).first
+            result = @encryption_io.collection_info(filter)
             mongo_feed(result.to_bson.to_s)
 
             mongo_done
