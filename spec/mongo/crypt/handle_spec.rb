@@ -1,6 +1,7 @@
 require 'mongo'
 require 'base64'
 require 'support/lite_constraints'
+require 'byebug'
 
 RSpec.configure do |config|
   config.extend(LiteConstraints)

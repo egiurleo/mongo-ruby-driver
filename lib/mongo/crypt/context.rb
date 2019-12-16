@@ -93,6 +93,7 @@ module Mongo
             result = @encryption_io.mark_command(cmd)
             byebug
             mongo_feed(result.to_bson.to_s)
+            byebug
 
             mongo_done
           when :need_kms

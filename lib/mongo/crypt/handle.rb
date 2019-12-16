@@ -58,17 +58,21 @@ module Mongo
 
       private
 
+      # TODO: documentation
       def set_logger
-        @log_callback = Proc.new do |level, msg, _, _|
+        @log_callback = Proc.new do |level, msg, len=nil, ctx=nil|
+          logger = Mongo::Logger.logger
           case level
           when :fatal
-            Mongo::Logger.logger.fatal(msg)
+            logger.fatal(msg)
           when :error
-            Mongo::Logger.logger.error(msg)
+            logger.error(msg)
           when :warning
-            Mongo::Logger.logger.warn(msg)
-          when :info, :trace
-            Mongo::Logger.logger.info(msg)
+            logger.warn(msg)
+          when :info
+            logger.info(msg)
+          when :trace
+            logger.debug(msg)
           else
             raise ArgumentError.new("Invalid log level: #{level}")
           end

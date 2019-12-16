@@ -49,6 +49,8 @@ describe 'Auto Encryption' do
           'validator' => { '$jsonSchema' => json_schema }
         }
       ].create
+
+      Mongo::Logger.level = Logger::DEBUG
     end
 
     it 'encrypts a command inserted into the database' do
