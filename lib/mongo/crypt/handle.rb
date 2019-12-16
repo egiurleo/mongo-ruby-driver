@@ -35,7 +35,7 @@ module Mongo
       # encoded string.
       #
       # There will be more arguemnts to this method once automatic encryption is introduced.
-      def initialize(kms_providers, schema_map)
+      def initialize(kms_providers, schema_map=nil)
         # FFI::AutoPointer uses a custom release strategy to automatically free
         # the pointer once this object goes out of scope
         @mongocrypt = FFI::AutoPointer.new(
@@ -43,6 +43,7 @@ module Mongo
           Binding.method(:mongocrypt_destroy)
         )
 
+        set_logger
         set_kms_providers(kms_providers)
         set_schema_map(schema_map) if schema_map
         initialize_mongocrypt
@@ -56,6 +57,26 @@ module Mongo
       end
 
       private
+
+      def set_logger
+        @log_callback = Proc.new do |level, msg, _, _|
+          case level
+          when :fatal
+            Mongo::Logger.logger.fatal(msg)
+          when :error
+            Mongo::Logger.logger.error(msg)
+          when :warning
+            Mongo::Logger.logger.warn(msg)
+          when :info, :trace
+            Mongo::Logger.logger.info(msg)
+          else
+            raise ArgumentError.new("Invalid log level: #{level}")
+          end
+        end
+
+        success = Binding.mongocrypt_setopt_log_handler(@mongocrypt, @log_callback, nil)
+        raise_from_status unless success
+      end
 
       # Validate the kms_providers option and use it to set the KMS provider
       # information on the underlying mongocrypt_t object
