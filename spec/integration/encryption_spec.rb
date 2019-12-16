@@ -54,12 +54,10 @@ describe 'Auto Encryption' do
     end
 
     it 'encrypts a command inserted into the database' do
-      new_json_schema = json_schema.dup
-      new_json_schema['properties']['ssn']['encrypt']['algorithm'] = 'fake algorithm'
       auto_encryption_options = {
         kms_providers: { local: { key: Base64.encode64("\x00" * 96) } },
         key_vault_namespace: 'admin.datakeys',
-        schema_map: { 'test.users' => new_json_schema }
+        schema_map: { 'test.users' => json_schema }
       }
 
       client = new_local_client('mongodb://localhost:27017/test', { write_concern: { w: :majority }, auto_encryption_options: auto_encryption_options })
