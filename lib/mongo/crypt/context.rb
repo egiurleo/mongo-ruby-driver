@@ -72,7 +72,6 @@ module Mongo
           when :done
             return nil
           when :need_mongo_keys
-            byebug
             filter = Hash.from_bson(BSON::ByteBuffer.new(mongo_operation))
 
             @encryption_io.find_keys(filter).each do |key|
@@ -91,9 +90,26 @@ module Mongo
             cmd = Hash.from_bson(BSON::ByteBuffer.new(mongo_operation))
 
             result = @encryption_io.mark_command(cmd)
-            byebug
+
+            # result = {
+            #   "hasEncryptionPlaceholders"=>false,
+            #   "schemaRequiresEncryption"=>false,
+            #   "result"=>{
+            #     "insert"=>"users",
+            #     "ordered"=>true,
+            #     "documents"=>[{
+            #       "ssn"=>"123-456-7890",
+            #       "_id"=>BSON::ObjectId('5df954b7151af3246fa54152')
+            #     }],
+            #     "writeConcern"=>{"w"=>"majority"},
+            #     "lsid"=>{
+            #       "id"=>BSON::Binary.new(Base64.deocde64("U8KQ5ISzQL6kfCAHFIYWFQ=="), :uuid),
+            #     }
+            #   },
+            #   "ok"=>1.0
+            # }
+
             mongo_feed(result.to_bson.to_s)
-            byebug
 
             mongo_done
           when :need_kms

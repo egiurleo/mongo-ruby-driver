@@ -36,6 +36,7 @@ module Mongo
       #
       # There will be more arguemnts to this method once automatic encryption is introduced.
       def initialize(kms_providers, schema_map=nil)
+        byebug
         # FFI::AutoPointer uses a custom release strategy to automatically free
         # the pointer once this object goes out of scope
         @mongocrypt = FFI::AutoPointer.new(
@@ -131,6 +132,7 @@ module Mongo
         # TODO: Set the AWS kms provider on the underlying mongocrypt_t object
       end
 
+      # TODO: documentation
       def set_schema_map(schema_map)
         schema_map = schema_map.to_bson.to_s
 

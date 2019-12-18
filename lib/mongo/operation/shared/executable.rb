@@ -50,7 +50,6 @@ module Mongo
 
       def get_result(server)
         r = dispatch_message(server)
-        # byebug
         result_class.new(r)
       end
 

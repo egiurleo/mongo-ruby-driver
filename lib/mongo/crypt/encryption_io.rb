@@ -74,7 +74,6 @@ module Mongo
       def mark_command(cmd)
         raise "This is bad" unless @mongocryptd_client && @client
         # TODO: reconsider this abstraction
-        byebug
 
         begin
           response = @mongocryptd_client.database.command(cmd)
