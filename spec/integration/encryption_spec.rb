@@ -55,28 +55,13 @@ describe 'Auto Encryption' do
     end
 
     it 'encrypts a command inserted into the database' do
-      insert_one = BSON::Binary.new(Base64.decode64("ASzggCwAAAAAAAAAAAAAAAACW0cZMYWOY3eoqQQkSdBtS9iHC4CSQA27dy6XJGcmTV8EDuhGNnPmbx0EKFTDb0PCSyCjMyuE4nsgmNYgjTaSuw=="), :cyphertext)
-      unencrypted_client.use(:test)[:users].insert_one({ ssn: insert_one })
+      # insert_one = BSON::Binary.new(Base64.decode64("ASzggCwAAAAAAAAAAAAAAAACW0cZMYWOY3eoqQQkSdBtS9iHC4CSQA27dy6XJGcmTV8EDuhGNnPmbx0EKFTDb0PCSyCjMyuE4nsgmNYgjTaSuw=="), :cyphertext)
+      # unencrypted_client.use(:test)[:users].insert_one({ ssn: insert_one })
 
-      # {"insert"=>"users", "ordered"=>true, "documents"=>[{"ssn"=><BSON::Binary:0x70349124925980 type=cyphertext data=0x012ce0802c000000...>, "_id"=>BSON::ObjectId('5df95ad0151af3270382b05d')}], "writeConcern"=>{"w"=>"majority"}, "lsid"=>{"id"=><BSON::Binary...
-      # {"insert"=>"users", "ordered"=>true, "documents"=>[{"ssn"=><BSON::Binary:0x70349124035320 type=cyphertext data=0x012ce0802c000000...>, "_id"=>BSON::ObjectId('5df95acf151af3270382b05c')}], "writeConcern"=>{"w"=>"majority"},  "lsid"=>{"id"=><BSON::Binary...
       auto_encryption_options = {
         kms_providers: { local: { key: "Mng0NCt4ZHVUYUJCa1kxNkVyNUR1QURhZ2h2UzR2d2RrZzh0cFBwM3R6NmdWMDFBMUN3YkQ5aXRRMkhGRGdQV09wOGVNYUMxT2k3NjZKelhaQmRCZGJkTXVyZG9uSjFk" } },
         key_vault_namespace: 'admin.datakeys',
-        schema_map: {
-  "test.users" => {
-		  "properties": {
-		    "ssn": {
-		      "encrypt": {
-		        "keyId": [BSON::Binary.new(Base64.encode64("LOCALAAAAAAAAAAAAAAAAA=="), :uuid)],
-		        "bsonType": "string",
-		        "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"
-		      }
-		    }
-		  },
-		  "bsonType": "object"
-		}
-}
+        schema_map: { "test.users" => json_schema }
       }
 
       client = new_local_client('mongodb://localhost:27017/test', { write_concern: { w: :majority }, auto_encryption_options: auto_encryption_options })
