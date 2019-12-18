@@ -44,12 +44,12 @@ describe 'Auto Encryption' do
 
       unencrypted_client.use(:admin)[:datakeys].insert_one(data_key)
 
-      unencrypted_client.use(:test)[:users].create
-      # unencrypted_client.use(:test)[:users,
-      #   {
-      #     'validator' => { '$jsonSchema' => json_schema }
-      #   }
-      # ].create
+      # unencrypted_client.use(:test)[:users].create
+      unencrypted_client.use(:test)[:users,
+        {
+          'validator' => { '$jsonSchema' => json_schema }
+        }
+      ].create
 
       Mongo::Logger.level = Logger::DEBUG
     end
@@ -61,7 +61,7 @@ describe 'Auto Encryption' do
       auto_encryption_options = {
         kms_providers: { local: { key: "Mng0NCt4ZHVUYUJCa1kxNkVyNUR1QURhZ2h2UzR2d2RrZzh0cFBwM3R6NmdWMDFBMUN3YkQ5aXRRMkhGRGdQV09wOGVNYUMxT2k3NjZKelhaQmRCZGJkTXVyZG9uSjFk" } },
         key_vault_namespace: 'admin.datakeys',
-        schema_map: { "test.users" => json_schema }
+        # schema_map: { "test.users" => json_schema }
       }
 
       client = new_local_client('mongodb://localhost:27017/test', { write_concern: { w: :majority }, auto_encryption_options: auto_encryption_options })
