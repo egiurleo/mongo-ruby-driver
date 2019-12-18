@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+require 'byebug'
 
 module Mongo
   module Protocol
@@ -62,9 +63,21 @@ module Mongo
         @flags = flags || []
         @options = options
         @global_args = global_args
-        @client = client
-        @sections = [ { type: 0, payload: global_args } ] + sections
+        @sections = [ { type: 0, payload: @global_args } ] + sections
         @request_id = nil
+
+        if client && client.encryption_options && !client.encryption_options[:bypass_auto_encryption]
+          @encrypted_command = client.encrypt(global_args[DATABASE_IDENTIFIER], build_command)
+
+          section = @sections.find { |s| s[:type] == 1 }
+          keys = section[:payload][:sequence].first.keys
+
+          keys.each do |key|
+            section[:payload][:sequence].first[key] = @encrypted_command['documents'].first[key.to_s]
+          end
+          byebug
+        end
+
         super
       end
 
@@ -148,10 +161,8 @@ module Mongo
 
       private
 
-      def command(client = nil)
-        return @command if @command
-
-        command = global_args.dup.tap do |cmd|
+      def build_command
+        global_args.dup.tap do |cmd|
           cmd.delete(DATABASE_IDENTIFIER)
           sections.each do |section|
             if section[:type] == 1
@@ -161,15 +172,10 @@ module Mongo
             end
           end
         end
+      end
 
-        if @client && @client.encryption_options && !@client.encryption_options[:bypass_auto_encryption]
-          db_name = global_args[DATABASE_IDENTIFIER]
-          @command = @client.encrypt(db_name, command)
-        else
-          @command = command
-        end
-
-        @command
+      def command(client = nil)
+        @command ||= build_command
       end
 
       def add_check_sum(buffer)
