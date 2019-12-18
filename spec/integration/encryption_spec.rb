@@ -64,25 +64,19 @@ describe 'Auto Encryption' do
         kms_providers: { local: { key: "Mng0NCt4ZHVUYUJCa1kxNkVyNUR1QURhZ2h2UzR2d2RrZzh0cFBwM3R6NmdWMDFBMUN3YkQ5aXRRMkhGRGdQV09wOGVNYUMxT2k3NjZKelhaQmRCZGJkTXVyZG9uSjFk" } },
         key_vault_namespace: 'admin.datakeys',
         schema_map: {
-          "test.users" => {
-            "properties" => {
-              "ssn" => {
-                "encrypt" => {
-                  "keyId" => [{
-                    "$binary" => {
-                        "base64" => "LOCALAAAAAAAAAAAAAAAAA==",
-                        "subType" => "04"
-
-                        }
-                  }],
-                  "bsonType" => "string",
-                  "algorithm" => "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"
-                }
-              }
-            },
-            "bsonType" => "object"
-          }
-        }
+  "test.users" => {
+		  "properties": {
+		    "ssn": {
+		      "encrypt": {
+		        "keyId": [BSON::Binary.new(Base64.encode64("LOCALAAAAAAAAAAAAAAAAA=="), :uuid)],
+		        "bsonType": "string",
+		        "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"
+		      }
+		    }
+		  },
+		  "bsonType": "object"
+		}
+}
       }
 
       client = new_local_client('mongodb://localhost:27017/test', { write_concern: { w: :majority }, auto_encryption_options: auto_encryption_options })
