@@ -4,6 +4,8 @@ gemspec
 gem 'yard'
 gem 'ffi'
 
+gem 'bson', :git => 'https://github.com/mongodb/bson-ruby.git', :branch => 'master'
+
 group :development, :testing do
   gem 'jruby-openssl', platforms: :jruby
   gem 'json', platforms: :jruby
