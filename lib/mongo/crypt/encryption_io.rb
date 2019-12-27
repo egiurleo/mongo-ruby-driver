@@ -23,6 +23,8 @@ module Mongo
       # Creates a new EncryptionIO object with information about how to connect
       # to the key vault.
       #
+      # @param [ Mongo::Client ] TODO
+      # @param [ Mongo::Client ] TODO
       # @param [ Mongo::Client ] key_vault_client A Client connected to the
       #   MongoDB instance containing the key vault
       # @param [ String ] key_vault_namespace The namespace of the key vault
@@ -30,9 +32,12 @@ module Mongo
       #
       # @note This class expects that the key_vault_client and key_vault_namespace
       #   options are not nil and are in the correct format
-      def initialize(key_vault_client, key_vault_namespace)
+      def initialize(client, mongocryptd_client, key_vault_client, key_vault_namespace)
+        @client = client
+        @mongocryptd_client = mongocryptd_client
+
         key_vault_db_name, key_vault_collection_name = key_vault_namespace.split('.')
-        @collection = key_vault_client.use(key_vault_db_name)[key_vault_collection_name]
+        @key_vault_collection = key_vault_client.use(key_vault_db_name)[key_vault_collection_name]
       end
 
       # Query for keys in the key vault collection using the provided
@@ -42,7 +47,7 @@ module Mongo
       #
       # @return [ Array<Hash> ] The query results
       def find_keys(filter)
-        @collection.find(filter).to_a
+        @key_vault_collection.find(filter).to_a
       end
 
       # Insert a document into the key vault collection
@@ -51,7 +56,28 @@ module Mongo
       #
       # @return [ Mongo::Operation::Insert::Result ] The insertion result
       def insert(document)
-        @collection.insert_one(document)
+        @key_vault_collection.insert_one(document)
+      end
+
+      # TODO: documentation
+      def collection_info(filter)
+        result = @client.database.list_collections
+        name = filter['name']
+        result.find { |r| r['name'] == name }
+      end
+
+      # TODO: documentation
+      def mark_command(cmd)
+        begin
+          response = @mongocryptd_client.database.command(cmd)
+        rescue Error::NoServerAvailable => e
+          raise e if @client.encryption_options[:mongocryptd_bypass_spawn]
+
+          @client.spawn_mongocryptd
+          response = @mongocryptd_client.database.command(cmd)
+        end
+
+        return response.first
       end
     end
   end

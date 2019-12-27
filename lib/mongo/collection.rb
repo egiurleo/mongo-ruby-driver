@@ -545,7 +545,7 @@ module Mongo
               :id_generator => client.options[:id_generator],
               :session => session,
               :txn_num => txn_num
-           ).execute(server)
+           ).execute(server, client)
         end
       end
     end

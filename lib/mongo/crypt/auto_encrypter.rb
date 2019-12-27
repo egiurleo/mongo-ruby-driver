@@ -61,9 +61,30 @@ module Mongo
         @mongocryptd_client = Client.new(
                                 @encryption_options[:mongocryptd_uri],
                                 monitoring_io: mongocryptd_client_monitoring_io,
+                                server_selection_timeout: 3,
                               )
 
+        @encryption_io = EncryptionIO.new(self, @mongocryptd_client, options[:key_vault_client], options[:key_vault_namespace])
+
         # TODO: use all the other options for auto-encryption/auto-decryption
+      end
+
+      # Encrypt a database command
+      #
+      # @param [ String ] database_name The name of the database on which the
+      #   command is being run
+      # @param [ Hash ] command The command to be encrypted
+      #
+      # @return [ Hash ] A new hash with the encrypted command
+      def encrypt(database_name, command)
+        result = AutoEncryptionContext.new(
+          @crypt_handle,
+          @encryption_io,
+          database_name,
+          command
+        ).run_state_machine
+
+        Hash.from_bson(BSON::ByteBuffer.new(result))
       end
 
       # Spawn a new mongocryptd process using the mongocryptd_spawn_path

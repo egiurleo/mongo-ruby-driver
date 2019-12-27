@@ -78,22 +78,35 @@ module Mongo
               mongo_feed(key.to_bson.to_s) if key
             end
 
-            Binding.mongocrypt_ctx_mongo_done(@ctx)
+            mongo_done
+          when :need_mongo_collinfo
+            filter = Hash.from_bson(BSON::ByteBuffer.new(mongo_operation))
+
+            result = @encryption_io.collection_info(filter)
+            mongo_feed(result.to_bson.to_s)
+
+            mongo_done
+          when :need_mongo_markings
+            cmd = Hash.from_bson(BSON::ByteBuffer.new(mongo_operation))
+
+            result = @encryption_io.mark_command(cmd)
+            mongo_feed(result.to_bson.to_s)
+
+            mongo_done
           else
-            # There are three other states to handle:
-            # - :need_mongo_collinfo
-            # - :need_mongo_markings
+            # There is one other state to handle:
             # - :need_kms
-            #
-            # None of these are required for explicit encryption/decryption,
-            # so these parts of the state machine will be implemented
-            # later
             raise("State #{state} is not yet supported by Mongo::Crypt::Context")
           end
         end
       end
 
       private
+
+      # TODO: documentation
+      def mongo_done
+        Binding.mongocrypt_ctx_mongo_done(@ctx)
+      end
 
       # Raise a Mongo::Error::CryptError based on the status of the underlying
       # mongocrypt_ctx_t object

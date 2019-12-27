@@ -28,6 +28,11 @@ module Mongo
         include ExecutableTransactionLabel
         include PolymorphicResult
 
+        def initialize(spec, client=nil)
+          @client = client
+          super(spec)
+        end
+
         private
 
         def get_result(server)
@@ -43,7 +48,7 @@ module Mongo
 
         def message(server)
           section = { type: 1, payload: { identifier: IDENTIFIER, sequence: send(IDENTIFIER) } }
-          Protocol::Msg.new(flags, { validating_keys: true }, command(server), section)
+          Protocol::Msg.new(flags, { validating_keys: true }, command(server), @client, section)
         end
       end
     end
