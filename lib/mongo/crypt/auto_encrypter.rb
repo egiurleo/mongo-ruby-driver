@@ -90,6 +90,17 @@ module Mongo
         Hash.from_bson(BSON::ByteBuffer.new(result))
       end
 
+      # TODO: document
+      def decrypt(command)
+        result = AutoDecryptionContext.new(
+          @crypt_handle,
+          @encryption_io,
+          command
+        ).run_state_machine
+
+        Hash.from_bson(BSON::ByteBuffer.new(result))
+      end
+
       # Spawn a new mongocryptd process using the mongocryptd_spawn_path
       # and mongocryptd_spawn_args passed in through the extra auto
       # encrypt options. Stdout and Stderr of this new process are written

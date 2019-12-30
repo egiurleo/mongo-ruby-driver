@@ -58,7 +58,7 @@ describe 'Auto Encryption' do
 
       it 'encrypts the command and decrypts the response' do
         result = encrypted_client[:users].find(ssn: '123-456-7890').first
-        byebug
+        expect(result['ssn']).to eq('123-456-7890')
       end
     end
   end
