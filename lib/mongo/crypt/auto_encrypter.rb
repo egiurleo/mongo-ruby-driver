@@ -64,6 +64,9 @@ module Mongo
                                 server_selection_timeout: 3,
                               )
 
+        key_vault_client = options[:key_vault_client]
+        key_vault_client.encryption_options = nil
+
         @encryption_io = EncryptionIO.new(self, @mongocryptd_client, options[:key_vault_client], options[:key_vault_namespace])
 
         # TODO: use all the other options for auto-encryption/auto-decryption

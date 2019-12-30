@@ -102,6 +102,11 @@ module Mongo
             end
             command = Options::Mapper.transform_documents(convert_flags(options), MAPPINGS, document)
             convert_limit_and_batch_size(command)
+
+            if @view.client && @view.client.encryption_options && !@view.client.encryption_options[:bypass_auto_encryption]
+              command = @view.client.encrypt(database.name, command)
+            end
+
             command
           end
 

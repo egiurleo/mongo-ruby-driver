@@ -42,7 +42,28 @@ describe 'Auto Encryption' do
     admin_client[:datakeys].insert_one(local_data_key)
   end
 
-  describe '#insert' do
+  describe '#find' do
+    context 'with validator' do
+      let(:schema_map) { nil }
+
+      before do
+        unencrypted_client[:users,
+          {
+            'validator' => { '$jsonSchema' => json_schema }
+          }
+        ].create
+
+        encrypted_client[:users].insert_one(ssn: '123-456-7890')
+      end
+
+      it 'encrypts the command and decrypts the response' do
+        result = encrypted_client[:users].find(ssn: '123-456-7890').first
+        byebug
+      end
+    end
+  end
+
+  describe '#insert_one' do
     context 'with validator' do
       let(:schema_map) { nil }
 
