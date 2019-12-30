@@ -74,7 +74,6 @@ module Mongo
           keys.each do |key|
             section[:payload][:sequence].first[key] = encrypted_command['documents'].first[key.to_s]
           end
-          byebug
         end
 
         super
