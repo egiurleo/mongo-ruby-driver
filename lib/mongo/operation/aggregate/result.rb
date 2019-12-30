@@ -62,8 +62,8 @@ module Mongo
         end
 
         # Get the documents for the aggregation result. This is either the
-        # first document's 'result' field, or if a cursor option was selected, 
-        # it is the 'firstBatch' field in the 'cursor' field of the first 
+        # first document's 'result' field, or if a cursor option was selected,
+        # it is the 'firstBatch' field in the 'cursor' field of the first
         # document returned. Otherwise, it is an explain document.
         #
         # @example Get the documents.
@@ -72,10 +72,17 @@ module Mongo
         # @return [ Array<BSON::Document> ] The documents.
         #
         # @since 2.0.0
-        def documents
-          docs = reply.documents[0][RESULT] 
+        def documents(client=nil)
+          docs = reply.documents[0][RESULT]
           docs ||= cursor_document[FIRST_BATCH] if cursor_document
-          docs ||= explain_document 
+          docs ||= explain_document
+
+          if client && client.encryption_options
+            docs = docs.map do |doc|
+              client.decrypt(doc)
+            end
+          end
+
           docs
         end
 

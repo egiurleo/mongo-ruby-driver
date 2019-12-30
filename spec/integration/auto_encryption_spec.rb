@@ -27,6 +27,7 @@ describe 'Auto Encryption' do
   end
 
   let(:admin_client) { unencrypted_client.use(:admin) }
+  let(:ssn) { '123-456-7890' }
 
   let(:local_data_key) do
     Utils.parse_extended_json(JSON.parse(File.read('spec/mongo/crypt/data/key_document_local.json')))
@@ -42,6 +43,27 @@ describe 'Auto Encryption' do
     admin_client[:datakeys].insert_one(local_data_key)
   end
 
+  describe '#aggregate' do
+    context 'with validator' do
+      let(:schema_map) { nil }
+
+      before do
+        unencrypted_client[:users,
+          {
+            'validator' => { '$jsonSchema' => json_schema }
+          }
+        ].create
+
+        encrypted_client[:users].insert_one(ssn: ssn)
+      end
+
+      it 'encrypts the command and decrypts the response' do
+        result = encrypted_client[:users].aggregate([ { '$match' => { 'ssn' => ssn } }])
+        expect(result.first['ssn']).to eq(ssn)
+      end
+    end
+  end
+
   describe '#find' do
     context 'with validator' do
       let(:schema_map) { nil }
@@ -53,12 +75,12 @@ describe 'Auto Encryption' do
           }
         ].create
 
-        encrypted_client[:users].insert_one(ssn: '123-456-7890')
+        encrypted_client[:users].insert_one(ssn: ssn)
       end
 
       it 'encrypts the command and decrypts the response' do
-        result = encrypted_client[:users].find(ssn: '123-456-7890').first
-        expect(result['ssn']).to eq('123-456-7890')
+        result = encrypted_client[:users].find(ssn: ssn).first
+        expect(result['ssn']).to eq(ssn)
       end
     end
   end
@@ -76,7 +98,7 @@ describe 'Auto Encryption' do
       end
 
       it 'encrypts the command' do
-        result = encrypted_client[:users].insert_one({ ssn: '123-456-7890' })
+        result = encrypted_client[:users].insert_one({ ssn: ssn })
         expect(result).to be_ok
         expect(result.inserted_ids.length).to eq(1)
 
@@ -84,7 +106,7 @@ describe 'Auto Encryption' do
 
         document = unencrypted_client[:users].find(_id: id).first
         expect(document['ssn']).to be_a_kind_of(BSON::Binary)
-        expect(document['ssn']).not_to eq('123-456-7890')
+        expect(document['ssn']).not_to eq(ssn)
       end
     end
 
@@ -92,7 +114,7 @@ describe 'Auto Encryption' do
       let(:schema_map) { { "test.users" => json_schema } }
 
       it 'encrypts the command' do
-        result = encrypted_client[:users].insert_one(ssn: '123-456-7890')
+        result = encrypted_client[:users].insert_one(ssn: ssn)
         expect(result).to be_ok
         expect(result.inserted_ids.length).to eq(1)
 
@@ -100,7 +122,7 @@ describe 'Auto Encryption' do
 
         document = unencrypted_client[:users].find(_id: id).first
         expect(document['ssn']).to be_a_kind_of(BSON::Binary)
-        expect(document['ssn']).not_to eq('123-456-7890')
+        expect(document['ssn']).not_to eq(ssn)
       end
     end
   end

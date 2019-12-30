@@ -113,6 +113,12 @@ module Mongo
             end
             command[:cursor] = cursor if cursor
             command.merge!(Options::Mapper.transform_documents(options, MAPPINGS))
+
+            client = @view.client
+            if client && client.encryption_options && !client.encryption_options[:bypass_auto_encryption]
+              command = client.encrypt(database.name, command)
+            end
+
             command
           end
 
