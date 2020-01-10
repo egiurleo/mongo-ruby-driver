@@ -21,7 +21,9 @@ describe Mongo::Crypt::DataKeyContext do
     )
   end
 
-  let(:context) { described_class.new(mongocrypt, 'local') }
+  let(:io) { double("Mongo::Crypt::EncryptionIO") }
+
+  let(:context) { described_class.new(mongocrypt, io, 'local') }
 
   describe '#initialize' do
     context 'with local kms provider' do
@@ -33,7 +35,7 @@ describe Mongo::Crypt::DataKeyContext do
     end
 
     context 'with aws kms provider' do
-      let(:context) { described_class.new(mongocrypt, 'aws', options) }
+      let(:context) { described_class.new(mongocrypt, io, 'aws', options) }
 
       context 'with empty options' do
         let(:options) { {} }

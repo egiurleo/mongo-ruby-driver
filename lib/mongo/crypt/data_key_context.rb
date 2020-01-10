@@ -25,16 +25,18 @@ module Mongo
       #
       # @param [ Mongo::Crypt::Handle ] mongocrypt a Handle that
       #   wraps a mongocrypt_t object used to create a new mongocrypt_ctx_t
+      # @param [ Mongo::Crypt::EncryptionIO ] io An object that performs all
+      #   driver I/O on behalf of libmongocrypt
       # @param [ String ] kms_provider The KMS provider to use. Options are
       #   "aws" and "local".
-      def initialize(mongocrypt, kms_provider, options={})
+      def initialize(mongocrypt, io, kms_provider, options={})
         unless ['aws', 'local'].include?(kms_provider)
           raise ArgumentError.new('#{kms_provider} is an invalid kms provider. Valid options are "aws" and "local"')
         end
 
         @options = options
 
-        super(mongocrypt, nil)
+        super(mongocrypt, io)
 
         set_local_master_key if kms_provider == 'local'
         set_aws_master_key if kms_provider == 'aws'

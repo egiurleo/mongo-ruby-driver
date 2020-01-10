@@ -53,7 +53,11 @@ module Mongo
     # @return [ String ] Base64-encoded UUID string representing the
     #   data key _id
     def create_data_key(kms_provider, options={})
-      result = Crypt::DataKeyContext.new(@crypt_handle, kms_provider, options).run_state_machine
+      result = Crypt::DataKeyContext.new(
+                @crypt_handle,
+                @encryption_io,
+                kms_provider,
+                options).run_state_machine
 
       data_key_document = Hash.from_bson(BSON::ByteBuffer.new(result))
       insert_result = @encryption_io.insert(data_key_document)
