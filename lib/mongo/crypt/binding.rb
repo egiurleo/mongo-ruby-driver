@@ -143,6 +143,12 @@ module Mongo
       # Creates a new mongocrypt_t object and returns a pointer to that object
       attach_function :mongocrypt_new, [], :pointer
 
+      # Sets the AWS KMS provider option on a mongocrypt_t object. Takes a pointer to the
+      # mongocrypt_t object, the AWS access key id as a string, the integer length of the AWS
+      # access key id, the AWS secret access key as a string, and the integer length of the
+      # AWS secret access key. Returns a boolean indicating success of the operation.
+      attach_function :mongocrypt_setopt_kms_provider_aws, [:pointer, :string, :int, :string, :int], :bool
+
       # Takes a pointer to a mongocrypt_t object and a pointer to a mongocrypt_binary_t
       # object wrapping a 96-byte master key for encryption/decryption.
       # Configures the mongocrypt_t with the KMS provider options and returns a boolean

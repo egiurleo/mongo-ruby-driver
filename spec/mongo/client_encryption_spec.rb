@@ -16,14 +16,6 @@ describe Mongo::ClientEncryption do
     )
   end
 
-  let(:kms_providers) do
-    {
-      local: {
-        key: "Mng0NCt4ZHVUYUJCa1kxNkVyNUR1QURhZ2h2UzR2d2RrZzh0cFBwM3R6NmdWMDFBMUN3YkQ5aXRRMkhGRGdQV09wOGVNYUMxT2k3NjZKelhaQmRCZGJkTXVyZG9uSjFk"
-      }
-    }
-  end
-
   let(:client_encryption) do
     described_class.new(client, {
       key_vault_namespace: key_vault_namespace,
@@ -31,7 +23,28 @@ describe Mongo::ClientEncryption do
     })
   end
 
+  let(:local_kms_provider) do
+    { key: "Mng0NCt4ZHVUYUJCa1kxNkVyNUR1QURhZ2h2UzR2d2RrZzh0cFBwM3R6NmdWMDFBMUN3YkQ5aXRRMkhGRGdQV09wOGVNYUMxT2k3NjZKelhaQmRCZGJkTXVyZG9uSjFk" }
+  end
+
+  let(:aws_kms_provider) do
+    {
+      access_key_id: 'hello',
+      secret_access_key: 'hello'
+    }
+  end
+
+  shared_context 'with local kms provider' do
+    let(:kms_providers) { { local: local_kms_provider } }
+  end
+
+  shared_context 'with AWS kms provider' do
+    let(:kms_providers) { { aws: aws_kms_provider } }
+  end
+
   describe '#initialize' do
+    include_context 'with local kms provider'
+
     let(:client) { new_local_client_nmio([SpecConfig.instance.addresses.first]) }
 
     context 'with nil key_vault_namespace' do
@@ -64,7 +77,17 @@ describe Mongo::ClientEncryption do
       end
     end
 
-    context 'with valid options' do
+    context 'with local KMS provider' do
+      it 'creates a ClientEncryption object' do
+        expect do
+          client_encryption
+        end.not_to raise_error
+      end
+    end
+
+    context 'with AWS KMS provider' do
+      include_context 'with AWS kms provider'
+
       it 'creates a ClientEncryption object' do
         expect do
           client_encryption
@@ -74,13 +97,17 @@ describe Mongo::ClientEncryption do
   end
 
   describe '#create_data_key' do
-    let(:result) { client_encryption.create_data_key }
+    include_context 'with local kms provider'
 
-    it 'returns a string' do
-      expect(result).to be_a_kind_of(String)
+    context 'with local KMS provider' do
+      let(:result) { client_encryption.create_data_key }
 
-      # make sure that the key actually exists in the DB
-      expect(client.use(key_vault_db)[key_vault_coll].find(_id: BSON::Binary.new(result, :uuid)).count).to eq(1)
+      it 'returns a string' do
+        expect(result).to be_a_kind_of(String)
+
+        # make sure that the key actually exists in the DB
+        expect(client.use(key_vault_db)[key_vault_coll].find(_id: BSON::Binary.new(result, :uuid)).count).to eq(1)
+      end
     end
   end
 
@@ -104,26 +131,34 @@ describe Mongo::ClientEncryption do
   describe '#encrypt' do
     include_context 'encryption/decryption'
 
-    it 'returns the correct encrypted string' do
-      encrypted = client_encryption.encrypt(
-        value,
-        {
-          key_id: data_key['_id'].data,
-          algorithm: 'AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic'
-        }
-      )
+    context 'with local kms provider' do
+      include_context 'with local kms provider'
 
-      expect(encrypted).to be_a_kind_of(String)
-      expect(encrypted).to eq(Base64.decode64(encrypted_value))
+      it 'returns the correct encrypted string' do
+        encrypted = client_encryption.encrypt(
+          value,
+          {
+            key_id: data_key['_id'].data,
+            algorithm: 'AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic'
+          }
+        )
+
+        expect(encrypted).to be_a_kind_of(String)
+        expect(encrypted).to eq(Base64.decode64(encrypted_value))
+      end
     end
   end
 
   describe '#decrypt' do
     include_context 'encryption/decryption'
 
-    it 'returns the correct unencrypted value' do
-      result = client_encryption.decrypt(Base64.decode64(encrypted_value))
-      expect(result).to eq(value)
+    context 'with local kms provider' do
+      include_context 'with local kms provider'
+
+      it 'returns the correct unencrypted value' do
+        result = client_encryption.decrypt(Base64.decode64(encrypted_value))
+        expect(result).to eq(value)
+      end
     end
   end
 end
