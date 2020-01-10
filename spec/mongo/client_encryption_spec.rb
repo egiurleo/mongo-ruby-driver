@@ -29,8 +29,8 @@ describe Mongo::ClientEncryption do
 
   let(:aws_kms_provider) do
     {
-      access_key_id: 'hello',
-      secret_access_key: 'hello'
+      access_key_id: ENV['FLE_AWS_ACCESS_KEY'],
+      secret_access_key: ENV['FLE_AWS_SECRET_ACCESS_KEY']
     }
   end
 
@@ -97,9 +97,9 @@ describe Mongo::ClientEncryption do
   end
 
   describe '#create_data_key' do
-    include_context 'with local kms provider'
-
     context 'with local KMS provider' do
+      include_context 'with local kms provider'
+
       let(:result) { client_encryption.create_data_key }
 
       it 'returns a string' do
@@ -108,6 +108,10 @@ describe Mongo::ClientEncryption do
         # make sure that the key actually exists in the DB
         expect(client.use(key_vault_db)[key_vault_coll].find(_id: BSON::Binary.new(result, :uuid)).count).to eq(1)
       end
+    end
+
+    context 'with AWS KMS provider' do
+
     end
   end
 
