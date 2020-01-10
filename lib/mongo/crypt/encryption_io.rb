@@ -86,6 +86,25 @@ module Mongo
 
         return response.first
       end
+
+      # TODO: documentation
+      def feed_kms(kms_helper)
+        endpoint = kms_helper.endpoint
+        message = kms_helper.message
+
+        host, port = endpoint.split(':')
+        # port ||= 27017
+
+        ssl_socket = Socket::SSL.new(host, port, "#{host}:#{port}", 10, ::Socket::Constants::AF_INET)
+        byebug
+
+        # Not sure if this works
+        ssl_socket.write(message)
+
+        while bytes_needed = kms_helper.bytes_needed > 0 do
+          kms_helper.feed(ssl_socket.read(bytes_needed))
+        end
+      end
     end
   end
 end

@@ -95,10 +95,14 @@ module Mongo
             mongocrypt_feed(result.to_bson.to_s)
 
             mongocrypt_done
+          when :need_kms
+            while kms_helper = mongocrypt_next_kms do
+              @encryption_io.feed_kms(kms_helper)
+            end
+
+            kms_done
           else
-            # There is one other state to handle:
-            # - :need_kms
-            raise("State #{state} is not yet supported by Mongo::Crypt::Context")
+            raise("State #{state} is not supported by Mongo::Crypt::Context")
           end
         end
       end
@@ -112,11 +116,6 @@ module Mongo
 
         Binding.mongocrypt_ctx_status(@ctx, status.ref)
         status.raise_crypt_error
-      end
-
-      # Indicate that state machine is done feeding I/O responses back to libmongocrypt
-      def mongocrypt_done
-        Binding.mongocrypt_ctx_mongo_done(@ctx)
       end
 
       # Finalize the state machine and return the result as a string
@@ -146,6 +145,23 @@ module Mongo
         binary = Binary.from_data(result)
         success = Binding.mongocrypt_ctx_mongo_feed(@ctx, binary.ref)
 
+        raise_from_status unless success
+      end
+
+      # Indicate that state machine is done feeding I/O responses back to libmongocrypt
+      def mongocrypt_done
+        Binding.mongocrypt_ctx_mongo_done(@ctx)
+      end
+
+      # TODO: documentation
+      def mongocrypt_next_kms
+        kms_ctx = Binding.mongocrypt_ctx_next_kms_ctx(@ctx)
+        kms_ctx == FFI::Pointer::NULL ? nil : KMSHelper.new(kms_ctx)
+      end
+
+      # TODO: documentation
+      def mongocrypt_done_with_kms
+        success = Binding.mongocrypt_ctx_kms_done(@ctx)
         raise_from_status unless success
       end
     end
