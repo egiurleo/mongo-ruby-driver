@@ -22,7 +22,7 @@ describe 'Explicit Encryption' do
         client_encryption_opts
       )
 
-      data_key_id = client_encryption.create_data_key
+      data_key_id = client_encryption.create_data_key('local')
 
       encrypted = client_encryption.encrypt(
         value,

@@ -15,7 +15,7 @@ describe Mongo::Crypt::DataKeyContext do
     )
   end
 
-  let(:context) { described_class.new(mongocrypt) }
+  let(:context) { described_class.new(mongocrypt, 'local') }
 
   describe '#initialize' do
     it 'does not raise an exception' do

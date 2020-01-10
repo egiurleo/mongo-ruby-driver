@@ -40,10 +40,13 @@ module Mongo
     # that key in the KMS collection. The generated key is encrypted with
     # the KMS master key.
     #
+    # @param [ String ] kms_provider The KMS provider to use. Options are
+    #   "aws" and "local".
+    #
     # @return [ String ] Base64-encoded UUID string representing the
     #   data key _id
-    def create_data_key
-      result = Crypt::DataKeyContext.new(@crypt_handle).run_state_machine
+    def create_data_key(kms_provider)
+      result = Crypt::DataKeyContext.new(@crypt_handle, kms_provider).run_state_machine
 
       data_key_document = Hash.from_bson(BSON::ByteBuffer.new(result))
       insert_result = @encryption_io.insert(data_key_document)

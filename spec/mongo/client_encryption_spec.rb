@@ -27,6 +27,8 @@ describe Mongo::ClientEncryption do
     { key: "Mng0NCt4ZHVUYUJCa1kxNkVyNUR1QURhZ2h2UzR2d2RrZzh0cFBwM3R6NmdWMDFBMUN3YkQ5aXRRMkhGRGdQV09wOGVNYUMxT2k3NjZKelhaQmRCZGJkTXVyZG9uSjFk" }
   end
 
+  # TODO: set up environment variables on evergreen
+  # TODO: figure out info about aws account
   let(:aws_kms_provider) do
     {
       access_key_id: ENV['FLE_AWS_ACCESS_KEY'],
@@ -100,9 +102,8 @@ describe Mongo::ClientEncryption do
     context 'with local KMS provider' do
       include_context 'with local kms provider'
 
-      let(:result) { client_encryption.create_data_key }
-
       it 'returns a string' do
+        result = client_encryption.create_data_key('local')
         expect(result).to be_a_kind_of(String)
 
         # make sure that the key actually exists in the DB
@@ -111,7 +112,15 @@ describe Mongo::ClientEncryption do
     end
 
     context 'with AWS KMS provider' do
+      include_context 'with AWS kms provider'
 
+      it 'returns a string' do
+        result = client_encryption.create_data_key('aws')
+        expect(result).to be_a_kind_of(String)
+
+        # make sure that the key actually exists in the DB
+        expect(client.use(key_vault_db)[key_vault_coll].find(_id: BSON::Binary.new(result, :uuid)).count).to eq(1)
+      end
     end
   end
 
