@@ -27,7 +27,7 @@ module Mongo
       #   wraps a mongocrypt_t object used to create a new mongocrypt_ctx_t
       # @param [ String ] kms_provider The KMS provider to use. Options are
       #   "aws" and "local".
-      def initialize(mongocrypt, kms_provider, options)
+      def initialize(mongocrypt, kms_provider, options={})
         unless ['aws', 'local'].include?(kms_provider)
           raise ArgumentError.new('#{kms_provider} is an invalid kms provider. Valid options are "aws" and "local"')
         end
