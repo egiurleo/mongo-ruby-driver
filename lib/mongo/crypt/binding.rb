@@ -185,6 +185,13 @@ module Mongo
       # the operation.
       attach_function :mongocrypt_ctx_status, [:pointer, :pointer], :bool
 
+      # Takes a pointer to a mongocrypt_ctx_t object and configures it to accept a masterkey
+      # from AWS. Also takes the AWS region as a string, the length of the AWS region string
+      # as an integer, the Amazon Resource Name (ARN) of the master key as a string, and the
+      # length of the ARN string as an integer. Returns a boolean indicating the success of
+      # the operation.
+      attach_function :mongocrypt_ctx_setopt_masterkey_aws, [:pointer, :string, :int, :string, :int], :bool
+
       # Takes a pointer to a mongocrypt_ctx_t object and configures it to accept
       # a local KMS master key
       # Returns a boolean indicating the success of the operation

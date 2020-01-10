@@ -115,7 +115,15 @@ describe Mongo::ClientEncryption do
       include_context 'with AWS kms provider'
 
       it 'returns a string' do
-        result = client_encryption.create_data_key('aws')
+        result = client_encryption.create_data_key(
+          'aws',
+          {
+            masterkey: {
+              region: 'us-east-2',
+              key: 'arn:aws:kms:us-east-2:947766748115:key/b87d5b05-1c5e-4a72-8658-68488dc35fd1'
+            }
+          }
+        )
         expect(result).to be_a_kind_of(String)
 
         # make sure that the key actually exists in the DB

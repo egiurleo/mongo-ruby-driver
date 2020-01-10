@@ -42,11 +42,18 @@ module Mongo
     #
     # @param [ String ] kms_provider The KMS provider to use. Options are
     #   "aws" and "local".
+    # @params [ Hash ] options
+    #
+    # @option [ Hash ] masterkey Information about the AWS masterkey. Required
+    #   if kms_provider is "aws".
+    #   - :region [ String ] The The AWS region of the master key (required).
+    #   - :key [ String ] The Amazon Resource Name (ARN) of the master key (required).
+    #   - :endpoint [ String ] An alternate host to send KMS requests to (optional).
     #
     # @return [ String ] Base64-encoded UUID string representing the
     #   data key _id
-    def create_data_key(kms_provider)
-      result = Crypt::DataKeyContext.new(@crypt_handle, kms_provider).run_state_machine
+    def create_data_key(kms_provider, options={})
+      result = Crypt::DataKeyContext.new(@crypt_handle, kms_provider, options).run_state_machine
 
       data_key_document = Hash.from_bson(BSON::ByteBuffer.new(result))
       insert_result = @encryption_io.insert(data_key_document)
