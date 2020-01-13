@@ -56,12 +56,17 @@ module Mongo
           "is invalid: #{ENV['LIBMONGOCRYPT_PATH']}\n\n#{e.class}: #{e.message}"
       end
 
-      # Takes an integer pointer as an optional out parameter specifying
-      # the return string length.
       # Returns the version string for the libmongocrypt library
+      #
+      # @param [ FFI::Pointer ] len An optional pointer to an uint32,
+      #   specifying the length of the returned string.
+      #
+      # @return [ String ] The version string for libmongocrypt
       attach_function :mongocrypt_version, [:pointer], :string
 
       # Returns a pointer to a new mongocrypt_binary_t
+      #
+      # @return [ FFI::Pointer ] A pointer to a mongocrypt_binary_t
       attach_function :mongocrypt_binary_new, [], :pointer
 
       # Takes a pointer to an array of uint-8 bytes and an integer length
