@@ -40,6 +40,7 @@ module Mongo
         # @return [ FFI::Pointer ] A pointer to a mongocrypt_binary_t
         attach_function :mongocrypt_binary_new_from_data, [:pointer, :int], :pointer
 
+
         # Returns a pointer to the byte array referenced by the mongocrypt_binary_t
         #
         # @param [ FFI::Pointer ] binary A pointer to the mongocrypt_binary_t
@@ -62,44 +63,52 @@ module Mongo
         #   object
         attach_function :mongocrypt_binary_destroy, [:pointer], :void
 
-        # Write data to a mongocrypt_binary_t object
-        #
-        # @param [ FFI::Pointer ] binary_p A pointer to the mongocrypt_binary_t
-        #   object
-        # @param [ String ] data The data to write to the binary object
-        #
-        # @return [ true ] Always true
-        # @raise [ ArgumentError ] Raises when trying to write more data
-        # than was originally allocated
-        def self.binary_write(binary_p, data)
-          # Cannot write a string that's longer than the space currently allocated
-          # by the mongocrypt_binary_t object
-          data_p = mongocrypt_binary_data(binary_p)
-          len = mongocrypt_binary_len(binary_p)
+        class << self
+          alias :new            :mongocrypt_binary_new
+          alias :new_from_data  :mongocrypt_binary_new_from_data
+          alias :data           :mongocrypt_binary_data
+          alias :length         :mongocrypt_binary_len
+          alias :destroy        :mongocrypt_binary_destroy
 
-          if len < data.length
-            raise ArgumentError.new(
-              "Cannot write #{data.length} bytes of data to a Binary object " +
-              "that was initialized with #{len} bytes."
-            )
+          # Write data to a mongocrypt_binary_t object
+          #
+          # @param [ FFI::Pointer ] binary_p A pointer to the mongocrypt_binary_t
+          #   object
+          # @param [ String ] data The data to write to the binary object
+          #
+          # @return [ true ] Always true
+          # @raise [ ArgumentError ] Raises when trying to write more data
+          # than was originally allocated
+          def binary_write(binary_p, data)
+            # Cannot write a string that's longer than the space currently allocated
+            # by the mongocrypt_binary_t object
+            data_p = mongocrypt_binary_data(binary_p)
+            len = mongocrypt_binary_len(binary_p)
+
+            if len < data.length
+              raise ArgumentError.new(
+                "Cannot write #{data.length} bytes of data to a Binary object " +
+                "that was initialized with #{len} bytes."
+              )
+            end
+
+            data_p.put_bytes(0, data)
+
+            true
           end
 
-          data_p.put_bytes(0, data)
-
-          true
-        end
-
-        # Return the data referenced by the mongocrypt_binary_t object
-        # as a string
-        #
-        # @param [ FFI::Pointer ] binary_p A pointer to the mongocrypt_binary_t
-        #   object
-        #
-        # @return [ String ] The underlying byte data as a string
-        def self.binary_to_string(binary_p)
-          str_p = mongocrypt_binary_data(binary_p)
-          len = mongocrypt_binary_len(binary_p)
-          str_p.read_string(len)
+          # Return the data referenced by the mongocrypt_binary_t object
+          # as a string
+          #
+          # @param [ FFI::Pointer ] binary_p A pointer to the mongocrypt_binary_t
+          #   object
+          #
+          # @return [ String ] The underlying byte data as a string
+          def binary_to_string(binary_p)
+            str_p = mongocrypt_binary_data(binary_p)
+            len = mongocrypt_binary_len(binary_p)
+            str_p.read_string(len)
+          end
         end
       end
     end

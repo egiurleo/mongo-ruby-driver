@@ -45,8 +45,8 @@ module Mongo
           # FFI::AutoPointer uses a custom release strategy to automatically free
           # the pointer once this object goes out of scope
           @binary_p = FFI::AutoPointer.new(
-            Binding::Binary.mongocrypt_binary_new_from_data(@data_p, bytes.length),
-            Binding::Binary.method(:mongocrypt_binary_destroy)
+            Binding::Binary.new_from_data(@data_p, bytes.length),
+            Binding::Binary.method(:destroy)
           )
         elsif pointer
           # If the Binary class is used this way, it means that the pointer
@@ -57,8 +57,8 @@ module Mongo
           # FFI::AutoPointer uses a custom release strategy to automatically free
           # the pointer once this object goes out of scope
           @binary_p = FFI::AutoPointer.new(
-            Binding::Binary.mongocrypt_binary_new,
-            Binding::Binary.method(:mongocrypt_binary_destroy)
+            Binding::Binary.new,
+            Binding::Binary.method(:destroy)
           )
         end
       end

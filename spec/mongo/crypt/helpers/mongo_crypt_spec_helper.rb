@@ -20,21 +20,21 @@ module MongoCryptSpecHelper
       .new(bytes.size)
       .write_array_of_type(FFI::TYPE_UINT8, :put_uint8, bytes)
 
-    Mongo::Crypt::Binding::Binary.mongocrypt_binary_new_from_data(p, bytes.length)
+    Mongo::Crypt::Binding::Binary.new_from_data(p, bytes.length)
   end
   module_function :mongocrypt_binary_t_from
 
   private
 
   def string_from_binary(binary_p)
-    str_p = Mongo::Crypt::Binding::Binary.mongocrypt_binary_data(binary_p)
-    len = Mongo::Crypt::Binding::Binary.mongocrypt_binary_len(binary_p)
+    str_p = Mongo::Crypt::Binding::Binary.data(binary_p)
+    len = Mongo::Crypt::Binding::Binary.length(binary_p)
     str_p.read_string(len)
   end
   module_function :string_from_binary
 
   def write_to_binary(binary_p, data)
-    str_p = Mongo::Crypt::Binding::Binary.mongocrypt_binary_data(binary_p)
+    str_p = Mongo::Crypt::Binding::Binary.data(binary_p)
     str_p.put_bytes(0, data)
   end
   module_function :write_to_binary

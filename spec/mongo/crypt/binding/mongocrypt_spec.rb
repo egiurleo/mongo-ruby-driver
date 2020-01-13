@@ -29,11 +29,11 @@ describe 'Mongo::Crypt::Binding' do
         p = FFI::MemoryPointer.new(key_bytes.size)
               .write_array_of_type(FFI::TYPE_UINT8, :put_uint8, key_bytes)
 
-        Mongo::Crypt::Binding::Binary.mongocrypt_binary_new_from_data(p, key_bytes.length)
+        Mongo::Crypt::Binding::Binary.new_from_data(p, key_bytes.length)
       end
 
       after do
-        Mongo::Crypt::Binding::Binary.mongocrypt_binary_destroy(binary)
+        Mongo::Crypt::Binding::Binary.destroy(binary)
       end
 
       context 'with valid key' do
@@ -60,7 +60,7 @@ describe 'Mongo::Crypt::Binding' do
         p = FFI::MemoryPointer.new(key_bytes.size)
               .write_array_of_type(FFI::TYPE_UINT8, :put_uint8, key_bytes)
 
-        Mongo::Crypt::Binding::Binary.mongocrypt_binary_new_from_data(p, key_bytes.length)
+        Mongo::Crypt::Binding::Binary.new_from_data(p, key_bytes.length)
       end
 
       let(:mongocrypt) do
@@ -71,7 +71,7 @@ describe 'Mongo::Crypt::Binding' do
       end
 
       after do
-        Mongo::Crypt::Binding::Binary.mongocrypt_binary_destroy(binary)
+        Mongo::Crypt::Binding::Binary.destroy(binary)
       end
 
       context 'with valid kms option' do
@@ -125,11 +125,11 @@ describe 'Mongo::Crypt::Binding' do
           p = FFI::MemoryPointer.new(key_bytes.size)
                 .write_array_of_type(FFI::TYPE_UINT8, :put_uint8, key_bytes)
 
-          Mongo::Crypt::Binding::Binary.mongocrypt_binary_new_from_data(p, key_bytes.length)
+          Mongo::Crypt::Binding::Binary.new_from_data(p, key_bytes.length)
         end
 
         after do
-          Mongo::Crypt::Binding::Binary.mongocrypt_binary_destroy(binary)
+          Mongo::Crypt::Binding::Binary.destroy(binary)
         end
 
         it 'returns a error_client status' do

@@ -18,38 +18,38 @@ describe 'Mongo::Crypt::Binding::Binary' do
   end
 
   after do
-    described_class.mongocrypt_binary_destroy(binary)
+    described_class.destroy(binary)
   end
 
-  describe '#mongocrypt_binary_new' do
-    let(:binary) { described_class.mongocrypt_binary_new }
+  describe '#new' do
+    let(:binary) { described_class.new }
 
     it 'returns a pointer' do
       expect(binary).to be_a_kind_of(FFI::Pointer)
     end
   end
 
-  describe '#mongocrypt_binary_new_from_data' do
-    let(:binary) { described_class.mongocrypt_binary_new_from_data(bytes_pointer, bytes.length) }
+  describe '#new_from_data' do
+    let(:binary) { described_class.new_from_data(bytes_pointer, bytes.length) }
 
     it 'returns a pointer' do
       expect(binary).to be_a_kind_of(FFI::Pointer)
     end
   end
 
-  describe '#mongocrypt_binary_data' do
-    let(:binary) { described_class.mongocrypt_binary_new_from_data(bytes_pointer, bytes.length) }
+  describe '#data' do
+    let(:binary) { described_class.new_from_data(bytes_pointer, bytes.length) }
 
     it 'returns the pointer to the data' do
-      expect(described_class.mongocrypt_binary_data(binary)).to eq(bytes_pointer)
+      expect(described_class.data(binary)).to eq(bytes_pointer)
     end
   end
 
-  describe '#mongocrypt_binary_len' do
-    let(:binary) { described_class.mongocrypt_binary_new_from_data(bytes_pointer, bytes.length) }
+  describe '#length' do
+    let(:binary) { described_class.new_from_data(bytes_pointer, bytes.length) }
 
     it 'returns the length of the data' do
-      expect(described_class.mongocrypt_binary_len(binary)).to eq(bytes.length)
+      expect(described_class.length(binary)).to eq(bytes.length)
     end
   end
 end

@@ -19,7 +19,7 @@ shared_context 'initialized for data key creation' do
   end
 
   after do
-    Mongo::Crypt::Binding::Binary.mongocrypt_binary_destroy(binary)
+    Mongo::Crypt::Binding::Binary.destroy(binary)
   end
 end
 
@@ -47,8 +47,8 @@ shared_context 'initialized for explicit encryption' do
   end
 
   after do
-    Mongo::Crypt::Binding::Binary.mongocrypt_binary_destroy(key_id_binary)
-    Mongo::Crypt::Binding::Binary.mongocrypt_binary_destroy(value_binary)
+    Mongo::Crypt::Binding::Binary.destroy(key_id_binary)
+    Mongo::Crypt::Binding::Binary.destroy(value_binary)
   end
 end
 
@@ -126,7 +126,7 @@ describe 'Mongo::Crypt::Binding' do
       end
 
       after do
-        Mongo::Crypt::Binding::Binary.mongocrypt_binary_destroy(binary)
+        Mongo::Crypt::Binding::Binary.destroy(binary)
       end
 
       context 'with valid key id' do
@@ -217,18 +217,18 @@ describe 'Mongo::Crypt::Binding' do
           Mongo::Crypt::Binding.mongocrypt_ctx_explicit_encrypt_init(context, value_binary)
         end
 
-        let(:out_binary) { Mongo::Crypt::Binding::Binary.mongocrypt_binary_new }
+        let(:out_binary) { Mongo::Crypt::Binding::Binary.new }
         let(:result) { Mongo::Crypt::Binding.mongocrypt_ctx_mongo_op(context, out_binary) }
 
         after do
-          Mongo::Crypt::Binding::Binary.mongocrypt_binary_destroy(out_binary)
+          Mongo::Crypt::Binding::Binary.destroy(out_binary)
         end
 
         it 'returns a BSON document' do
           expect(result).to be true
 
-          data = Mongo::Crypt::Binding::Binary.mongocrypt_binary_data(out_binary)
-          len = Mongo::Crypt::Binding::Binary.mongocrypt_binary_len(out_binary)
+          data = Mongo::Crypt::Binding::Binary.data(out_binary)
+          len = Mongo::Crypt::Binding::Binary.length(out_binary)
 
           response = data.get_array_of_uint8(0, len).pack('C*')
           expect(response).to be_a_kind_of(String)
