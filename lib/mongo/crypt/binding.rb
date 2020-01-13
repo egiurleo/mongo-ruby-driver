@@ -197,38 +197,73 @@ module Mongo
       # by the caller (can be set to nil).
       callback :mongocrypt_log_fn_t, [:log_level, :string, :int, :pointer], :void
 
-      # Sets a method to be called on every log message. Takes a pointer to a mongocrypt_t object,
-      # a mongocrypt_log_fn_t callback, and a pointer to a log_ctx. Returns a boolean indicating
-      # success of the operation.
-      attach_function :mongocrypt_setopt_log_handler, [:pointer, :mongocrypt_log_fn_t, :pointer], :bool
-
       # Creates a new mongocrypt_t object and returns a pointer to that object
+      #
+      # @return [ FFI::Pointer ] A new mongocrypt_t object
       attach_function :mongocrypt_new, [], :pointer
 
-      # Takes a pointer to a mongocrypt_t object and a pointer to a mongocrypt_binary_t
-      # object wrapping a 96-byte master key for encryption/decryption.
-      # Configures the mongocrypt_t with the KMS provider options and returns a boolean
-      # indicating the success of the operation.
-      attach_function :mongocrypt_setopt_kms_provider_local, [:pointer, :pointer], :bool
+      # Sets a handler on the mongocrypt_t object to get called on every log
+      #   message
+      #
+      # @param [ FFI::Pointer ] mongocrypt A pointer to a mongocrypt_t object
+      # @param [ Method ] log_fn A method that will log a message
+      # @param [ FFI::Pointer ] log_ctx A context passed to the log callback
+      #
+      # @return [ true | false ] Whether the operation was performed successfully
+      attach_function(
+        :mongocrypt_setopt_log_handler,
+        [:pointer, :mongocrypt_log_fn_t, :pointer],
+        :bool
+      )
 
-      # Takes a pointer to a mongocrypt_t object and a pointer to a mongocrypt_binary_t
-      # object. Sets the mongocrypt schema map to the string wrapped by the binary and
-      # returns a boolean indicating the success of the operation.
+      # Changes the mongocrypt_t object to accept KMS provider information
+      # from a local KMS provider
+      #
+      # @param [ FFI::Pointer ] mongocrypt A pointer to a mongocrypt_t object
+      # @param [ FFI::Pointer ] binary A pointer to a mongocrypt_binary_t object
+      #   which wraps the 96-byte local master key; the key data is copied
+      #   by the mongocrypt_t object and it is valid to delete this binary
+      #   after this method has been called
+      #
+      # @return [ true | false ] Whether the operation was performed successfully
+      attach_function(
+        :mongocrypt_setopt_kms_provider_local,
+        [:pointer, :pointer],
+        :bool
+      )
+
+      # Sets the local schema map on the mongocrypt_t object
+      #
+      # @param [ FFI::Pointer ] mongocrypt A pointer to a mongocrypt_t object
+      # @param [ FFI::Pointer ] binary A pointer to a mongocrypt_binary_t object
+      #   which wraps the local schema map
+      #
+      # @return [ true | false ] Whether the operation was performed successfully
       attach_function :mongocrypt_setopt_schema_map, [:pointer, :pointer], :bool
 
-      # Takes a pointer to a mongocrypt_t object and initializes that object.
-      # Should be called after mongocrypt_setopt_kms_provider_local and other methods that
-      # set options on the mongocrypt_t object.
-      # Returns a boolean indicating the success of the operation.
+      # Initializes the mongocrypt_t object
+      #
+      # @param [ FFI::Pointer ] mongocrypt A pointer to a mongocrypt_t object
+      #
+      # @return [ true | false ] Whether the operation was performed successfully
       attach_function :mongocrypt_init, [:pointer], :bool
 
-      # Takes a pointer to a mongocrypt_t object and a pointer to a mongocrypt_status_t
-      # object as an out parameter. Sets the status information of the mongocrypt_t
-      # on the specified status object. Returns a boolean indicating the success of
-      # the operation.
+      # Gets the status associated with the mongocrypt_t object and writes
+      # it to the mongocrypt_status_t object
+      #
+      # @param [ FFI::Pointer ] mongocrypt A pointer to a mongocrypt_t object
+      # @param [ FFI::Pointer ] status A pointer to a mongocrypt_status_t
+      #   object, used as an out parameter. The status of the mongocrypt_t
+      #   object will be written to this status object.
+      #
+      # @return [ true | false ] Whether the operation was performed successfully
       attach_function :mongocrypt_status, [:pointer, :pointer], :bool
 
-      # Takes a pointer to a mongocrypt_t object and destroys the reference to that object.
+      # Destroys the reference to the mongocrypt_t object
+      #
+      # @param [ FFI::Pointer ] mongocrypt A pointer to a mongocrypt_t object
+      #
+      # @return [ true | false ] Whether the operation was performed successfully
       attach_function :mongocrypt_destroy, [:pointer], :void
 
       # Takes a pointer to a mongocrypt_t object
@@ -339,50 +374,81 @@ module Mongo
 
       # A callback to a crypto AES-256-CBC encrypt/decrypt function. Takes:
       # - An optional pointer to a mongocrypt_ctx_t object
-      # - A pointer to a mongocrypt_binary_t object that wraps a 32-byte encryption key
+      # - A pointer to a mongocrypt_binary_t object that wraps a 32-byte
+      #     encryption key
       # - A pointer to a mongocrypt_binary_t object that wraps a 16-byte iv
-      # - A pointer to a mongocrypt_binary_t object that wraps the encryption/decryption input
-      # - A pointer to a mongocrypt_binary_t object to which the encryption/decryption output will be written
-      # - A pointer to an int32 where the number of bytes of the output will be written
+      # - A pointer to a mongocrypt_binary_t object that wraps the
+      #     encryption/decryption input
+      # - A pointer to a mongocrypt_binary_t object to which the
+      #     encryption/decryption output will be written
+      # - A pointer to an int32 where the number of bytes of the output will
+      #     be written
       # - An optional pointer to a mongocrypt_status_t object for error messages
       # Returns a boolean indicating the success of the operation
-      callback :mongocrypt_crypto_fn, [:pointer, :pointer, :pointer, :pointer, :pointer, :pointer, :pointer], :bool
+      callback(
+        :mongocrypt_crypto_fn,
+        [:pointer, :pointer, :pointer, :pointer, :pointer, :pointer, :pointer],
+        :bool
+      )
 
       # A callback to a crypto HMAC SHA-512 or SHA-256 function. Takes:
       # - An optional pointer to a mongocrypt_ctx_t object
-      # - A pointer to a mongocrypt_binary_t object that wraps a 32-byte encryption key
-      # - A pointer to a mongocrypt_binary_t object that wraps the encryption input
-      # - A pointer to a mongocrypt_binary_t object to which the output will be written
+      # - A pointer to a mongocrypt_binary_t object that wraps a 32-byte
+      #     encryption key
+      # - A pointer to a mongocrypt_binary_t object that wraps the encryption
+      #     input
+      # - A pointer to a mongocrypt_binary_t object to which the output will be
+      #     written
       # - An optional pointer to a mongocrypt_status_t object for error messages
       # Returns a boolean indicating the success of the operation
-      callback :mongocrypt_hmac_fn, [:pointer, :pointer, :pointer, :pointer, :pointer], :bool
+      callback(
+        :mongocrypt_hmac_fn,
+        [:pointer, :pointer, :pointer, :pointer, :pointer],
+        :bool
+      )
 
       # A callback to a crypto hash (SHA-256) function. Takes:
       # - An optional pointer to a mongocrypt_ctx_t object
-      # - A pointer to a mongocrypt_binary_t object that wraps the encryption input
-      # - A pointer to a mongocrypt_binary_t object to which the output will be written
+      # - A pointer to a mongocrypt_binary_t object that wraps the encryption
+      #     input
+      # - A pointer to a mongocrypt_binary_t object to which the output will be
+      #     written
       # - An optional pointer to a mongocrypt_status_t object for error messages
       # Returns a boolean indicating the success of the operation
-      callback :mongocrypt_hash_fn, [:pointer, :pointer, :pointer, :pointer], :bool
+      callback(
+        :mongocrypt_hash_fn,
+        [:pointer, :pointer, :pointer, :pointer],
+        :bool
+      )
 
       # A callback to a crypto secure random function. Takes:
       # - An optional pointer to a mongocrypt_ctx_t object
-      # - A pointer to a mongocrypt_binary_t object to which the output will be written
+      # - A pointer to a mongocrypt_binary_t object to which the output will be
+      #     written
       # - The number of random bytes requested
       # - An optional pointer to a mongocrypt_status_t object for error messages
       # Returns a boolean indicating the success of the operation
       callback :mongocrypt_random_fn, [:pointer, :pointer, :int, :pointer], :bool
 
-      # Sets crypto hooks on mongocrypt_t object. Takes:
-      # - A pointer to a mongocrypt_t object, which will use the hooks for encryption
-      # - A mongocrypt_crypto_fn for encryption
-      # - A mongocrypt_crypto_fn for decryption
-      # - A mongocrypt_random_fn
-      # - A mongocrypt_hmac_fn with an HMAC SHA-512 function
-      # - A mongocrypt_hmac_fn with an HMAC SHA-256 function
-      # - A mongocrypt_hash_fn
-      # - An optional pointer to a mongocrypt_ctx_t object
-      # Returns a boolean indicating the success of the operation
+      # Sets crypto hooks on mongocrypt_t object
+      #
+      # @param [ FFI::Pointer ] mongocrypt A pointer to a mongocrypt_t object,
+      #   which will use the hooks for encryption
+      # @param [ Method ] encrypt_fn A function that performs AES encryption
+      #   (see mongocrypt_crypto_fn callback for method signature)
+      # @param [ Method ] decrypt_fn A function that performs AES decryption
+      #   (see mongocrypt_crypto_fn callback for method signature)
+      # @param [ Method ] random_fn A crypto-secure function that generates
+      #   a string of random bytes (see mongocrypt_random_fn callback for
+      #   method signature)
+      # @param [ Method ] hmac_sha_512_fn An HMAC-SHA512 function (see
+      #   mongocrypt_hmac_fn callback for method signature)
+      # @param [ Method ] hmac_sha_256_fn An HMAC-SHA256 function (see
+      #   mongocrypt_hmac_fn callback for method signature)
+      # @param [ Method ] hash_fn A crypto hash SHA246 function (see
+      #   mongocrypt_hash_fn callback or method signature)
+      #
+      # @return [ true | false ] Whether the operation was successful
       attach_function(
         :mongocrypt_setopt_crypto_hooks,
         [
