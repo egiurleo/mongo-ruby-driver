@@ -77,9 +77,9 @@ describe Mongo::Crypt::Binary do
     end
   end
 
-  describe '#to_string' do
+  describe '#to_s' do
     it 'returns the original string' do
-      expect(binary.to_string).to eq(data)
+      expect(binary.to_s).to eq(data)
     end
   end
 
@@ -101,7 +101,7 @@ describe Mongo::Crypt::Binary do
 
       it 'writes data to the binary object' do
         expect(binary_no_data.write(data)).to be true
-        expect(binary_no_data.to_string).to eq(data)
+        expect(binary_no_data.to_s).to eq(data)
       end
     end
 

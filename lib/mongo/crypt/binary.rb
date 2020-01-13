@@ -109,7 +109,7 @@ module Mongo
       # Returns the data stored as a string
       #
       # @return [ String ] Data stored in the mongocrypt_binary_t as a string
-      def to_string
+      def to_s
         Binding.binary_to_string(pointer)
       end
 

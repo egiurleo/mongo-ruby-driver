@@ -125,7 +125,7 @@ module Mongo
         success = Binding.mongocrypt_ctx_finalize(@ctx, binary.pointer)
         raise_from_status unless success
 
-        binary.to_string
+        binary.to_s
       end
 
       # Returns a binary string representing an operation that the
@@ -137,7 +137,7 @@ module Mongo
         success = Binding.mongocrypt_ctx_mongo_op(@ctx, binary.pointer)
         raise_from_status unless success
 
-        binary.to_string
+        binary.to_s
       end
 
       # Feeds the result of a Mongo operation back to libmongocrypt.
