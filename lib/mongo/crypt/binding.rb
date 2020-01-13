@@ -64,26 +64,83 @@ module Mongo
       # @return [ String ] The version string for libmongocrypt
       attach_function :mongocrypt_version, [:pointer], :string
 
-      # Returns a pointer to a new mongocrypt_binary_t
+      # Returns a pointer to a new mongocrypt_binary_t object
       #
       # @return [ FFI::Pointer ] A pointer to a mongocrypt_binary_t
       attach_function :mongocrypt_binary_new, [], :pointer
 
-      # Takes a pointer to an array of uint-8 bytes and an integer length
-      # Returns a pointer to a new mongocrypt_binary_t wrapping the specified byte buffer.
+      # Returns a pointer to a new mongocrypt_binary_t object wrapping the
+      # provided data.
+      #
+      # @param [ FFI::Pointer ] data A pointer to an array of uint8. This array
+      #   is not owned by the mongocrypt_binary_t and must be de-allocated
+      #   separately.
+      # @param [ Integer ] len The length of the array
+      #
+      # @return [ FFI::Pointer ] A pointer to a mongocrypt_binary_t
       attach_function :mongocrypt_binary_new_from_data, [:pointer, :int], :pointer
 
-      # Takes a mongocrypt_binary_t pointer
-      # Returns a pointer to the byte array wrapped by the mongocrypt_binary_t
+      # Returns a pointer to the byte array referenced by the mongocrypt_binary_t
+      #
+      # @param [ FFI::Pointer ] binary A pointer to the mongocrypt_binary_t
+      #   object
+      #
+      # @return [ FFI::Pointer ] A pointer to the array of uint8
       attach_function :mongocrypt_binary_data, [:pointer], :pointer
 
-      # Takes a mongocrypt_binary_t pointer
-      # Returns the length of the byte array wrapped by the mongocrypt_binary_t
+      # Returns the length of the underlying data
+      #
+      # @param [ FFI::Pointer ] binary A pointer to the mongocrypt_binary_t
+      #   object
+      #
+      # @return [ Integer ] The length of the wrapped array
       attach_function :mongocrypt_binary_len, [:pointer], :int
 
-      # Takes a mongocrypt_binary_t pointer
       # Frees the reference to that mongocrypt_binary_t
+      #
+      # @param [ FFI::Pointer ] binary A pointer to the mongocrypt_binary_t
+      #   object
       attach_function :mongocrypt_binary_destroy, [:pointer], :void
+
+      # Write data to a mongocrypt_binary_t object
+      #
+      # @param [ FFI::Pointer ] binary_p A pointer to the mongocrypt_binary_t
+      #   object
+      # @param [ String ] data The data to write to the binary object
+      #
+      # @return [ true ] Always true
+      # @raise [ ArgumentError ] Raises when trying to write more data
+      # than was originally allocated
+      def self.binary_write(binary_p, data)
+        # Cannot write a string that's longer than the space currently allocated
+        # by the mongocrypt_binary_t object
+        data_p = mongocrypt_binary_data(binary_p)
+        len = mongocrypt_binary_len(binary_p)
+
+        if len < data.length
+          raise ArgumentError.new(
+            "Cannot write #{data.length} bytes of data to a Binary object " +
+            "that was initialized with #{len} bytes."
+          )
+        end
+
+        data_p.put_bytes(0, data)
+
+        true
+      end
+
+      # Return the data referenced by the mongocrypt_binary_t object
+      # as a string
+      #
+      # @param [ FFI::Pointer ] binary_p A pointer to the mongocrypt_binary_t
+      #   object
+      #
+      # @return [ String ] The underlying byte data as a string
+      def self.binary_to_string(binary_p)
+        str_p = mongocrypt_binary_data(binary_p)
+        len = mongocrypt_binary_len(binary_p)
+        str_p.read_string(len)
+      end
 
       # Status types
       enum :status_type, [

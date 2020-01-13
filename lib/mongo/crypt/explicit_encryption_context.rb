@@ -79,7 +79,7 @@ module Mongo
       # passes in the value to be encrypted as a Mongo::Crypt::Binary reference
       def initialize_ctx
         binary = Binary.from_data(@value)
-        success = Binding.mongocrypt_ctx_explicit_encrypt_init(@ctx, binary.ref)
+        success = Binding.mongocrypt_ctx_explicit_encrypt_init(@ctx, binary.pointer)
 
         raise_from_status unless success
       end

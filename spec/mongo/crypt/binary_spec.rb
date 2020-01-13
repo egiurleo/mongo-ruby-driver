@@ -45,7 +45,7 @@ describe Mongo::Crypt::Binary do
           binary
         end.not_to raise_error
 
-        expect(binary.ref).to eq(pointer)
+        expect(binary.pointer).to eq(pointer)
       end
     end
   end
@@ -73,7 +73,7 @@ describe Mongo::Crypt::Binary do
         binary
       end.not_to raise_error
 
-      expect(binary.ref).to eq(pointer)
+      expect(binary.pointer).to eq(pointer)
     end
   end
 
