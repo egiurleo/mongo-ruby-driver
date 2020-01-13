@@ -58,7 +58,7 @@ module Mongo
         end
 
         binary = Binary.from_data(@options[:key_id])
-        success = Binding.mongocrypt_ctx_setopt_key_id(@ctx, binary.ref)
+        success = Binding.mongocrypt_ctx_setopt_key_id(@ctx, binary.pointer)
 
         raise_from_status unless success
       end
