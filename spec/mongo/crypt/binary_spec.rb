@@ -87,9 +87,22 @@ describe Mongo::Crypt::Binary do
     # Binary must have enough space pre-allocated
     let(:binary) { described_class.from_data("\00" * data.length) }
 
-    it 'writes data to the binary object' do
-      expect(binary.write(data)).to be true
-      expect(binary.to_string).to eq(data)
+    context 'to a Binary object that owns data' do
+      it 'raises an exception' do
+        expect do
+          binary.write(data)
+        end.to raise_error(ArgumentError, /Cannot write to an owned Binary/)
+      end
+    end
+
+    context 'to a Binary that does not own data' do
+      let(:binary_p) { binary.pointer }
+      let(:binary_no_data) { described_class.from_pointer(binary_p) }
+
+      it 'writes data to the binary object' do
+        expect(binary_no_data.write(data)).to be true
+        expect(binary_no_data.to_string).to eq(data)
+      end
     end
 
     context 'with no space allocated' do
@@ -104,10 +117,12 @@ describe Mongo::Crypt::Binary do
 
     context 'without enough space allocated' do
       let(:binary) { described_class.from_data("\00" * (data.length - 1)) }
+      let(:binary_p) { binary.pointer }
+      let(:binary_no_data) { described_class.from_pointer(binary_p) }
 
       it 'returns false' do
         expect do
-          binary.write(data)
+          binary_no_data.write(data)
         end.to raise_error(ArgumentError, /Cannot write #{data.length} bytes of data to a Binary object that was initialized with #{data.length - 1} bytes/)
       end
     end
