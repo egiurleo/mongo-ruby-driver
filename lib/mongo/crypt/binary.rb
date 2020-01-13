@@ -45,8 +45,8 @@ module Mongo
           # FFI::AutoPointer uses a custom release strategy to automatically free
           # the pointer once this object goes out of scope
           @binary_p = FFI::AutoPointer.new(
-            Binding.mongocrypt_binary_new_from_data(@data_p, bytes.length),
-            Binding.method(:mongocrypt_binary_destroy)
+            Binding::Binary.mongocrypt_binary_new_from_data(@data_p, bytes.length),
+            Binding::Binary.method(:mongocrypt_binary_destroy)
           )
         elsif pointer
           # If the Binary class is used this way, it means that the pointer
@@ -57,8 +57,8 @@ module Mongo
           # FFI::AutoPointer uses a custom release strategy to automatically free
           # the pointer once this object goes out of scope
           @binary_p = FFI::AutoPointer.new(
-            Binding.mongocrypt_binary_new,
-            Binding.method(:mongocrypt_binary_destroy)
+            Binding::Binary.mongocrypt_binary_new,
+            Binding::Binary.method(:mongocrypt_binary_destroy)
           )
         end
       end
@@ -103,14 +103,14 @@ module Mongo
           raise ArgumentError, 'Cannot write to an owned Binary'
         end
 
-        Binding.binary_write(pointer, data)
+        Binding::Binary.binary_write(pointer, data)
       end
 
       # Returns the data stored as a string
       #
       # @return [ String ] Data stored in the mongocrypt_binary_t as a string
       def to_s
-        Binding.binary_to_string(pointer)
+        Binding::Binary.binary_to_string(pointer)
       end
 
       # Returns the reference to the underlying mongocrypt_binary_t

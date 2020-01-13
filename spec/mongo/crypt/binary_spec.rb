@@ -33,11 +33,11 @@ describe Mongo::Crypt::Binary do
     end
 
     context 'with pointer' do
-      let(:pointer) { Mongo::Crypt::Binding.mongocrypt_binary_new }
+      let(:pointer) { Mongo::Crypt::Binding::Binary.mongocrypt_binary_new }
       let(:binary) { described_class.new(pointer: pointer) }
 
       after do
-        Mongo::Crypt::Binding.mongocrypt_binary_destroy(pointer)
+        Mongo::Crypt::Binding::Binary.mongocrypt_binary_destroy(pointer)
       end
 
       it 'creates a new Mongo::Crypt::Binary object from pointer' do
@@ -61,11 +61,11 @@ describe Mongo::Crypt::Binary do
   end
 
   describe '#self.from_pointer' do
-    let(:pointer) { Mongo::Crypt::Binding.mongocrypt_binary_new }
+    let(:pointer) { Mongo::Crypt::Binding::Binary.mongocrypt_binary_new }
     let(:binary) { described_class.from_pointer(pointer) }
 
     after do
-      Mongo::Crypt::Binding.mongocrypt_binary_destroy(pointer)
+      Mongo::Crypt::Binding::Binary.mongocrypt_binary_destroy(pointer)
     end
 
     it 'creates a new Mongo::Crypt::Binary object from pointer' do
