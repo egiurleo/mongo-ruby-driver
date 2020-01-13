@@ -8,7 +8,7 @@ end
 
 shared_context 'initialized for data key creation' do
   let(:master_key) { "ru\xfe\x00" * 24 }
-  let(:binary) { MongoCryptSpecHelper.mongocrypt_binary_t_from(master_key)}
+  let(:binary) { Mongo::Crypt::Binding::Binary.from_s(master_key) }
 
   before do
     Mongo::Crypt::Binding.mongocrypt_setopt_kms_provider_local(mongocrypt, binary)
@@ -17,22 +17,18 @@ shared_context 'initialized for data key creation' do
 
     Mongo::Crypt::Binding.mongocrypt_ctx_setopt_masterkey_local(context)
   end
-
-  after do
-    Mongo::Crypt::Binding::Binary.destroy(binary)
-  end
 end
 
 shared_context 'initialized for explicit encryption' do
   # TODO: replace with code showing how to generate this value
   let(:key_id) { "\xDEd\x00\xDC\x0E\xF8J\x99\x97\xFA\xCC\x04\xBF\xAA\x00\xF5" }
-  let(:key_id_binary) { MongoCryptSpecHelper.mongocrypt_binary_t_from(key_id) }
+  let(:key_id_binary) { Mongo::Crypt::Binding::Binary.from_s(key_id) }
 
   let(:value) do
     { 'v': 'Hello, world!' }.to_bson.to_s
   end
 
-  let(:value_binary) { MongoCryptSpecHelper.mongocrypt_binary_t_from(value) }
+  let(:value_binary) { Mongo::Crypt::Binding::Binary.from_s(value) }
 
   before do
     MongoCryptSpecHelper.bind_crypto_hooks(mongocrypt)
@@ -44,11 +40,6 @@ shared_context 'initialized for explicit encryption' do
       'AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic',
       -1
     )
-  end
-
-  after do
-    Mongo::Crypt::Binding::Binary.destroy(key_id_binary)
-    Mongo::Crypt::Binding::Binary.destroy(value_binary)
   end
 end
 
@@ -115,7 +106,7 @@ describe 'Mongo::Crypt::Binding' do
     end
 
     describe '#mongocrypt_ctx_setopt_key_id' do
-      let(:binary) { MongoCryptSpecHelper.mongocrypt_binary_t_from(uuid) }
+      let(:binary) { Mongo::Crypt::Binding::Binary.from_s(uuid) }
 
       let(:result) do
         Mongo::Crypt::Binding.mongocrypt_ctx_setopt_key_id(context, binary)
@@ -123,10 +114,6 @@ describe 'Mongo::Crypt::Binding' do
 
       before do
         Mongo::Crypt::Binding.mongocrypt_init(mongocrypt)
-      end
-
-      after do
-        Mongo::Crypt::Binding::Binary.destroy(binary)
       end
 
       context 'with valid key id' do

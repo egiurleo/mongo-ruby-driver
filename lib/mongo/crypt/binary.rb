@@ -35,19 +35,8 @@ module Mongo
       # methods
       def initialize(data: nil, pointer: nil)
         if data
-          # Represent data string as array of uint-8 bytes
-          bytes = data.unpack('C*')
-
-          # FFI::MemoryPointer automatically frees memory when it goes out of scope
-          @data_p = FFI::MemoryPointer.new(bytes.length)
-                    .write_array_of_uint8(bytes)
-
-          # FFI::AutoPointer uses a custom release strategy to automatically free
-          # the pointer once this object goes out of scope
-          @binary_p = FFI::AutoPointer.new(
-            Binding::Binary.new_from_data(@data_p, bytes.length),
-            Binding::Binary.method(:destroy)
-          )
+          @binary_p = Binding::Binary.from_s(data)
+          @data_p = Binding::Binary.data(@binary_p)
         elsif pointer
           # If the Binary class is used this way, it means that the pointer
           # for the underlying mongocrypt_binary_t object is allocated somewhere
@@ -103,14 +92,14 @@ module Mongo
           raise ArgumentError, 'Cannot write to an owned Binary'
         end
 
-        Binding::Binary.binary_write(pointer, data)
+        Binding::Binary.write(pointer, data)
       end
 
       # Returns the data stored as a string
       #
       # @return [ String ] Data stored in the mongocrypt_binary_t as a string
       def to_s
-        Binding::Binary.binary_to_string(pointer)
+        Binding::Binary.to_s(pointer)
       end
 
       # Returns the reference to the underlying mongocrypt_binary_t

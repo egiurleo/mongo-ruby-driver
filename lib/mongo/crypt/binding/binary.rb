@@ -79,7 +79,7 @@ module Mongo
           # @return [ true ] Always true
           # @raise [ ArgumentError ] Raises when trying to write more data
           # than was originally allocated
-          def binary_write(binary_p, data)
+          def write(binary_p, data)
             # Cannot write a string that's longer than the space currently allocated
             # by the mongocrypt_binary_t object
             data_p = mongocrypt_binary_data(binary_p)
@@ -104,10 +104,35 @@ module Mongo
           #   object
           #
           # @return [ String ] The underlying byte data as a string
-          def binary_to_string(binary_p)
+          def to_s(binary_p)
             str_p = mongocrypt_binary_data(binary_p)
             len = mongocrypt_binary_len(binary_p)
             str_p.read_string(len)
+          end
+
+          # Initialize a mongocrypt_binary_t object that references the
+          #   specified string
+          #
+          # @param [ String ] string The string to be wrapped by the
+          #   mongocryt_binary_t
+          #
+          # @return [ FFI::AutoPointer ] A pointer to the new
+          #   mongocrypt_binary_t object, which will be automatically cleaned
+          #   up when this object goes out of scope
+          def from_s(string)
+            bytes = string.unpack('C*')
+
+            # FFI::MemoryPointer automatically frees memory when it goes out of scope
+            data_p = FFI::MemoryPointer
+              .new(bytes.size)
+              .write_array_of_type(FFI::TYPE_UINT8, :put_uint8, bytes)
+
+            # FFI::AutoPointer uses a custom release strategy to automatically free
+            # the pointer once this object goes out of scope
+            FFI::AutoPointer.new(
+              new_from_data(data_p, bytes.length),
+              method(:destroy)
+            )
           end
         end
       end
