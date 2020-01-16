@@ -49,7 +49,7 @@ module Mongo
 
       # TODO: documentation
       def feed(data)
-        binary = Binary.new(data)
+        binary = Binary.from_data(data.to_s)
 
         success = Binding.mongocrypt_kms_ctx_feed(@kms_ctx, binary.ref)
         raise_from_status unless success

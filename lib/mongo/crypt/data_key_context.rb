@@ -40,6 +40,7 @@ module Mongo
 
         set_local_master_key if kms_provider == 'local'
         set_aws_master_key if kms_provider == 'aws'
+        set_aws_endpoint if kms_provider == 'aws' && @options[:endpoint]
 
         initialize_ctx
       end
@@ -82,6 +83,14 @@ module Mongo
           -1
         )
         raise_from_status unless success
+      end
+
+      def set_aws_endpoint
+        success = Binding.mongocrypt_ctx_setopt_masterkey_aws_endpoint(
+          @ctx,
+          @options[:endpoint],
+          -1
+        )
       end
 
       # Initializes the underlying mongocrypt_ctx_t object

@@ -192,6 +192,8 @@ module Mongo
       # the operation.
       attach_function :mongocrypt_ctx_setopt_masterkey_aws, [:pointer, :string, :int, :string, :int], :bool
 
+      attach_function :mongocrypt_ctx_setopt_masterkey_aws_endpoint, [:pointer, :string, :int], :bool
+
       # Takes a pointer to a mongocrypt_ctx_t object and configures it to accept
       # a local KMS master key
       # Returns a boolean indicating the success of the operation

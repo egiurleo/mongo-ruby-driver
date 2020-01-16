@@ -100,7 +100,7 @@ module Mongo
               @encryption_io.feed_kms(kms_helper)
             end
 
-            kms_done
+            mongocrypt_done_with_kms
           else
             raise("State #{state} is not supported by Mongo::Crypt::Context")
           end

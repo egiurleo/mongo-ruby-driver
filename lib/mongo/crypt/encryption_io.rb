@@ -93,16 +93,20 @@ module Mongo
         message = kms_helper.message
 
         host, port = endpoint.split(':')
-        # port ||= 27017
+        port ||= 443
 
-        ssl_socket = Socket::SSL.new(host, port, "#{host}:#{port}", 10, ::Socket::Constants::AF_INET)
-        byebug
+        socket = TCPSocket.open(host, port)
+        ssl_context = OpenSSL::SSL::SSLContext.new()
+        ssl_socket = OpenSSL::SSL::SSLSocket.new(socket, ssl_context)
+        ssl_socket.connect
 
-        # Not sure if this works
-        ssl_socket.write(message)
+        ssl_socket.puts(message)
 
-        while bytes_needed = kms_helper.bytes_needed > 0 do
-          kms_helper.feed(ssl_socket.read(bytes_needed))
+        bytes_needed = kms_helper.bytes_needed
+        while bytes_needed > 0 do
+          bytes = ssl_socket.sysread(bytes_needed)
+          kms_helper.feed(bytes)
+          bytes_needed = kms_helper.bytes_needed
         end
       end
     end
