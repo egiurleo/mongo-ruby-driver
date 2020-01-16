@@ -121,7 +121,7 @@ describe Mongo::ClientEncryption do
             masterkey: {
               region: 'us-east-2',
               key: 'arn:aws:kms:us-east-2:947766748115:key/b87d5b05-1c5e-4a72-8658-68488dc35fd1',
-              # endpoint: ''
+              endpoint: 'kms.us-east-2.amazonaws.com:443'
             }
           }
         )
