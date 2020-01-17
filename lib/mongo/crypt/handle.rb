@@ -280,7 +280,7 @@ module Mongo
           )
         end
 
-        # TODO: Set the AWS kms provider on the underlying mongocrypt_t object
+        Binding.setopt_kms_provider_aws(self, access_key_id, secret_access_key)
       end
 
       # Initialize the underlying mongocrypt_t object and raise an error if the operation fails
