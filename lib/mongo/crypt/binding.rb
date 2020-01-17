@@ -228,6 +228,44 @@ module Mongo
         end
       end
 
+      # Configure mongocrypt_t object with AWS KMS provider options
+      #
+      # @param [ FFI::Pointer ] crypt A pointer to a mongocrypt_t object
+      # @param [ String ] aws_access_key_id The AWS access key id
+      # @param [ Integer ] aws_access_key_id_len The length of the AWS access
+      #   key string (or -1 for a null-terminated string)
+      # @param [ String ] aws_secret_access_key The AWS secret access key
+      # @param [ Integer ] aws_secret_access_key_len The length of the AWS
+      #   secret access key (or -1 for a null-terminated string)
+      #
+      # @return [ Boolean ] Returns whether the option was set successfully
+      attach_function(
+        :mongocrypt_setopt_kms_provider_aws,
+        [:pointer, :string, :int, :string, :int],
+        :bool
+      )
+
+      # Configure the Handle object with AWS KMS provider options
+      #
+      # @param [ Mongo::Crypt::Handle ] handle
+      # @param [ String ] aws_access_key The AWS access key
+      # @param [ String ] aws_secret_access_key The AWS secret access key
+      #
+      # @raise [ Mongo::CryptError ] If the callback is not set successfully
+      def self.setopt_kms_provider_aws(handle,
+        aws_access_key, aws_secret_access_key
+      )
+        check_status(handle) do
+          mongocrypt_setopt_kms_provider_aws(
+            handle.ref,
+            aws_access_key,
+            -1,
+            aws_secret_access_key,
+            -1
+          )
+        end
+      end
+
       # Configure mongocrypt_t object to take local KSM provider options
       #
       # @param [ FFI::Pointer ] crypt A pointer to a mongocrypt_t object
@@ -382,6 +420,72 @@ module Mongo
       def self.ctx_setopt_algorithm(context, name)
         check_ctx_status(context) do
           mongocrypt_ctx_setopt_algorithm(context.ctx_p, name, -1)
+        end
+      end
+
+      # Configure the ctx to take a masterkey from AWS
+      #
+      # @param [ FFI::Pointer ] ctx A pointer to a mongocrypt_ctx_object
+      # @param [ String ] region The AWS region
+      # @param [ Integer ] region_len The length of the region string (or -1
+      #   for a null-terminated string)
+      # @param [ String ] arn The Amazon Resource Name (ARN) of the mater key
+      # @param [ Integer ] arn_len The length of the ARN (or -1 for a
+      #   null-terminated string)
+      #
+      # @return [ Boolean ] Returns whether the option was set successfully
+      attach_function(
+        :mongocrypt_ctx_setopt_masterkey_aws,
+        [:pointer, :string, :int, :string, :int],
+        :bool
+      )
+
+      # Configure the Context object to take a masterkey from AWS
+      #
+      # @param [ Mongo::Crypt::Context ] context
+      # @param [ String ] region The AWS region (e.g. "us-east-2")
+      # @param [ String ] arn The masterkey Amazon Resource Name
+      #
+      # @raise [ Error::CryptError ] If the operation failed
+      def self.ctx_setopt_masterkey_aws(context, region, arn)
+        check_ctx_status(context) do
+          mongocrypt_ctx_setopt_masterkey_aws(
+            context.ctx_p,
+            region,
+            -1,
+            arn,
+            -1
+          )
+        end
+      end
+
+      # Set a custom endpoint at which to fetch the AWS master key
+      #
+      # @param [ FFI::Pointer ] ctx
+      # @param [ String ] endpoint The custom endpoint
+      # @param [ Integer ] endpoint_len The length of the endpoint string (or
+      #   -1 for a null-terminated string)
+      #
+      # @return [ Boolean ] Returns whether the option was set successfully
+      attach_function(
+        :mongocrypt_ctx_setopt_masterkey_aws_endpoint,
+        [:pointer, :string, :int],
+        :bool
+      )
+
+      # Configure the Context object to take a masterkey from AWS
+      #
+      # @param [ Mongo::Crypt::Context ] context
+      # @param [ String ] endpoint The custom AWS masterkey endpoint
+      #
+      # @raise [ Error::CryptError ] If the operation failed
+      def self.ctx_setopt_masterkey_aws_endpoint(context, endpoint)
+        check_ctx_status(context) do
+          mongocrypt_ctx_setopt_masterkey_aws_endpoint(
+            context.ctx_p,
+            endpoint,
+            -1,
+          )
         end
       end
 
@@ -628,6 +732,20 @@ module Mongo
       #
       # @return [ Boolean ] A boolean indicating the success of the operation
       attach_function :mongocrypt_ctx_mongo_done, [:pointer], :bool
+
+      # Return a pointer to a mongocrypt_kms_ctx_t object or NULL
+      #
+      # @param [ FFI::Pointer ] ctx A pointer to a mongocrypt_ctx_t object
+      #
+      # @return [ FFI::Pointer ] A pointer to a mongocrypt_kms_ctx_t object
+      attach_function :mongocrypt_ctx_next_kms_ctx, [:pointer], :pointer
+
+      attach_function :mongocrypt_kms_ctx_message, [:pointer, :pointer], :bool
+      attach_function :mongocrypt_kms_ctx_endpoint, [:pointer, :pointer], :bool
+      attach_function :mongocrypt_kms_ctx_bytes_needed, [:pointer], :int
+      attach_function :mongocrypt_kms_ctx_feed, [:pointer, :pointer], :bool
+      attach_function :mongocrypt_kms_ctx_status, [:pointer, :pointer], :bool
+      attach_function :mongocrypt_ctx_kms_done, [:pointer], :bool
 
       # Perform the final encryption or decryption and return a BSON document
       #
