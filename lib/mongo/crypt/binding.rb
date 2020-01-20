@@ -251,7 +251,7 @@ module Mongo
       # @param [ String ] aws_access_key The AWS access key
       # @param [ String ] aws_secret_access_key The AWS secret access key
       #
-      # @raise [ Mongo::CryptError ] If the callback is not set successfully
+      # @raise [ Mongo::CryptError ] If the option is not set successfully
       def self.setopt_kms_provider_aws(handle,
         aws_access_key, aws_secret_access_key
       )
@@ -533,7 +533,7 @@ module Mongo
         check_ctx_status(context) do
           mongocrypt_ctx_datakey_init(context.ctx_p)
         end
-      end
+    end
 
       # Initializes the ctx for auto-encryption
       #
@@ -805,7 +805,7 @@ module Mongo
       def self.kms_ctx_endpoint(kms_context)
         ptr = FFI::MemoryPointer.new(:pointer, 1)
 
-        check_kms_ctx_status(kms_context)
+        check_kms_ctx_status(kms_context) do
           mongocrypt_kms_ctx_endpoint(kms_context.kms_ctx_p, ptr)
         end
 
@@ -813,8 +813,41 @@ module Mongo
         str_ptr.null? ? nil : str_ptr.read_string.force_encoding('UTF-8')
       end
 
+      # Get the number of bytes needed by the KMS context
+      #
+      # @param [ FFI::Pointer ] kms The mongocrypt_kms_ctx_t object
+      #
+      # @return [ Integer ] The number of bytes needed
       attach_function :mongocrypt_kms_ctx_bytes_needed, [:pointer], :int
+
+      # Get the number of bytes needed by the KMSContext
+      #
+      # @param [ Mongo::Crypt::KMSContext ] kms_context
+      #
+      # @return [ Integer ] The number of bytes needed
+      def self.kms_ctx_bytes_needed(kms_context)
+        mongocrypt_kms_ctx_bytes_needed(kms_context.kms_ctx_p)
+      end
+
+      # Feed replies from the KMS back to libmongocrypt
+      #
+      # @param [ FFI::Pointer ] kms A pointer to the mongocrypt_kms_ctx_t object
+      # @param [ FFI::Pointer ] bytes A pointer to a mongocrypt_binary_t
+      #   object that references the response from the KMS
+      #
+      # @return [ Boolean ] Whether the operation was successful
       attach_function :mongocrypt_kms_ctx_feed, [:pointer, :pointer], :bool
+
+      # TODO: documentation
+      def self.kms_ctx_feed(kms_context, bytes)
+        check_kms_ctx_status(kms_context) do
+          Binary.wrap_string(bytes) do |binary|
+            mongocrypt_kms_ctx_feed(kms_context.kms_ctx_p, binary.ref)
+          end
+        end
+      end
+
+      # TODO: documentation
       attach_function :mongocrypt_kms_ctx_status, [:pointer, :pointer], :bool
 
       # TODO: documentation
@@ -827,7 +860,15 @@ module Mongo
         end
       end
 
+      # TODO: documentation
       attach_function :mongocrypt_ctx_kms_done, [:pointer], :bool
+
+      # TODO: documentation
+      def self.ctx_kms_done(context)
+        check_ctx_status(context) do
+          mongocrypt_ctx_kms_done(context.ctx_p)
+        end
+      end
 
       # Perform the final encryption or decryption and return a BSON document
       #

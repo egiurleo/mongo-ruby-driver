@@ -86,6 +86,28 @@ module Mongo
 
         return response.first
       end
+
+      # TODO: documentation
+      def feed_kms(kms_context)
+        endpoint = kms_context.endpoint
+        message = kms_context.message
+
+        host, port = endpoint.split(':')
+
+        socket = TCPSocket.open(host, port)
+        ssl_context = OpenSSL::SSL::SSLContext.new()
+        ssl_socket = OpenSSL::SSL::SSLSocket.new(socket, ssl_context)
+        ssl_socket.connect
+
+        ssl_socket.puts(message)
+
+        bytes_needed = kms_context.bytes_needed
+        while bytes_needed > 0 do
+          bytes = ssl_socket.sysread(bytes_needed)
+          kms_context.feed(bytes)
+          bytes_needed = kms_context.bytes_needed
+        end
+      end
     end
   end
 end

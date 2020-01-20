@@ -25,19 +25,62 @@ module Mongo
       #
       # @param [ Mongo::Crypt::Handle ] mongocrypt a Handle that
       #   wraps a mongocrypt_t object used to create a new mongocrypt_ctx_t
-      def initialize(mongocrypt)
-        # This initializer will eventually take more arguments:
-        # - kms_providers (just supporting local for right now)
-        # - options: master key (only relevant to AWS) and key_alt_names (not required for POC)
+      # @param [ String ] kms_provider TODO: more info here
+      def initialize(mongocrypt, io, kms_provider, options={})
+        unless ['aws', 'local'].include?(kms_provider)
+          raise ArgumentError.new('#{kms_provider} is an invalid kms provider. Valid options are "aws" and "local"')
+        end
 
-        super(mongocrypt, nil)
+        @options = options
 
-        # Configures the underlying mongocrypt_ctx_t object to accept local
-        # KMS options
-        Binding.ctx_setopt_masterkey_local(self)
+        super(mongocrypt, io)
+
+        set_local_master_key if kms_provider == 'local'
+        set_aws_master_key if kms_provider == 'aws'
+        set_aws_endpoint if kms_provider == 'aws' && @options[:masterkey][:endpoint]
 
         # Initializes the underlying mongocrypt_ctx_t object
         Binding.ctx_datakey_init(self)
+      end
+
+      private
+
+      # Configures the underlying mongocrypt_ctx_t object to accept local
+      # KMS options
+      def set_local_master_key
+        Binding.ctx_setopt_masterkey_local(self)
+      end
+
+      # Configure the underlying mongocrypt_ctx_t object to accept AWS
+      # KMS options
+      def set_aws_master_key
+        unless @options[:masterkey]
+          raise ArgumentError.new('The :masterkey option cannot be nil')
+        end
+
+        unless @options[:masterkey].is_a?(Hash)
+          raise ArgumentError.new('The :masterkey option must be a Hash')
+        end
+
+        # TODO: better error message
+        unless @options[:masterkey][:region] && @options[:masterkey][:region].is_a?(String)
+          raise ArgumentError.new('The :masterkey option must contain a region specified as a string')
+        end
+
+        # TODO: better error message
+        unless @options[:masterkey][:key] && @options[:masterkey][:key].is_a?(String)
+          raise ArgumentError.new('The :masterkey option must contain a key specified as a string')
+        end
+
+        Binding.ctx_setopt_masterkey_aws(
+          self,
+          @options[:masterkey][:region],
+          @options[:masterkey][:key]
+        )
+      end
+
+      def set_aws_endpoint
+        Binding.ctx_setopt_masterkey_aws_endpoint(self, @options[:masterkey][:endpoint])
       end
     end
   end

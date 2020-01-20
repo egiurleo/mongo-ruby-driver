@@ -30,7 +30,22 @@ module Mongo
 
       # TODO: documentation
       def endpoint
+        Binding.kms_ctx_endpoint(self)
+      end
 
+      # TODO: documentation
+      def message
+        Binding.kms_ctx_message(self)
+      end
+
+      # TODO: documentation
+      def bytes_needed
+        Binding.kms_ctx_bytes_needed(self)
+      end
+
+      # TODO: documentation
+      def feed(data)
+        Binding.kms_ctx_feed(self, data)
       end
     end
   end

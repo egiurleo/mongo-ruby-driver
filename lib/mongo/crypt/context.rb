@@ -100,8 +100,10 @@ module Mongo
             mongocrypt_done
           when :need_kms
             while kms_ctx = Binding.ctx_next_kms_ctx(self) do
-
+              @encryption_io.feed_kms(kms_ctx)
             end
+
+            Binding.ctx_kms_done(self)
           end
         end
       end
