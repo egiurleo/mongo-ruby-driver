@@ -740,11 +740,65 @@ module Mongo
       # @return [ FFI::Pointer ] A pointer to a mongocrypt_kms_ctx_t object
       attach_function :mongocrypt_ctx_next_kms_ctx, [:pointer], :pointer
 
+      # Return a new KMSContext object needed by a Context object
+      #
+      # @param [ Mongo::Crypt::Context ] context
+      #
+      # @return [ Mongo::Crypt::KMSContext | nil ] The KMSContext needed to
+      #   fetch an AWS masterkey or nil, if no KMSContext is needed
+      def self.ctx_next_kms_ctx(context)
+        kms_ctx_p = mongocrypt_ctx_next_kms_ctx(context)
+
+        if kms_ctx_p == FFI::Pointer::NULL
+          nil
+        else
+          KMSContext.new(kms_ctx_p)
+        end
+      end
+
+      # Get the message needed to fetch the AWS KMS masterkey
+      #
+      # @param [ FFI::Pointer ] kms Pointer to the mongocrypt_kms_ctx_t object
+      # @param [ FFI::Pointer ] msg (outparam) Pointer to a mongocrypt_binary_t
+      #   object that will have the location of the message written to it by
+      #   libmongocrypt
+      #
+      # @return [ Boolean ] Whether the operation is successful
       attach_function :mongocrypt_kms_ctx_message, [:pointer, :pointer], :bool
+
+      # Get the HTTP message needed to fetch the AWS KMS masterkey from a
+      # KMSContext object
+      #
+      # @param [ Mongo::Crypt::KMSContext ] kms_context
+      #
+      # @raise [ Mongo::Crypt::Error ] If the response is not fed successfully
+      #
+      # @return [ String ] The HTTP message
+      def self.kms_ctx_message(kms_context)
+        binary = Binary.new
+
+        check_kms_ctx_status(kms_context) do
+          mongocrypt_kms_ctx_message(kms_context.kms_ctx_p, binary)
+        end
+
+        return binary.to_s
+      end
+
       attach_function :mongocrypt_kms_ctx_endpoint, [:pointer, :pointer], :bool
       attach_function :mongocrypt_kms_ctx_bytes_needed, [:pointer], :int
       attach_function :mongocrypt_kms_ctx_feed, [:pointer, :pointer], :bool
       attach_function :mongocrypt_kms_ctx_status, [:pointer, :pointer], :bool
+
+      # TODO: documentation
+      def self.check_kms_ctx_status(kms_context)
+        unless yield
+          status = Status.new
+
+          mongocrypt_kms_ctx_status(kms_context.ref, status.ref)
+          status.raise_crypt_error
+        end
+      end
+
       attach_function :mongocrypt_ctx_kms_done, [:pointer], :bool
 
       # Perform the final encryption or decryption and return a BSON document

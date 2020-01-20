@@ -98,10 +98,10 @@ module Mongo
             mongocrypt_feed(result)
 
             mongocrypt_done
-          else
-            # There is one other state to handle:
-            # - :need_kms
-            raise("State #{state} is not yet supported by Mongo::Crypt::Context")
+          when :need_kms
+            while kms_ctx = Binding.ctx_next_kms_ctx(self) do
+
+            end
           end
         end
       end
