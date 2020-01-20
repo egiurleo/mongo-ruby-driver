@@ -27,6 +27,11 @@ module Mongo
 
       # TODO: documentation
       attr_reader :kms_ctx_p
+
+      # TODO: documentation
+      def endpoint
+
+      end
     end
   end
 end

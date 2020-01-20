@@ -749,7 +749,7 @@ module Mongo
       def self.ctx_next_kms_ctx(context)
         kms_ctx_p = mongocrypt_ctx_next_kms_ctx(context)
 
-        if kms_ctx_p == FFI::Pointer::NULL
+        if kms_ctx_p.null?
           nil
         else
           KMSContext.new(kms_ctx_p)
@@ -784,7 +784,35 @@ module Mongo
         return binary.to_s
       end
 
+      # Get the hostname with which to connect over TLS to get information about
+      # the AWS masterkey
+      #
+      # @param [ FFI::Pointer ] kms A pointer to a mongocrypt_kms_ctx_t object
+      # @param [ FFI::Pointer ] endpoint (out param) A pointer to which the
+      #   endpoint string will be written by libmongocrypt
+      #
+      # @return [ Boolean ] Whether the operation was successful
       attach_function :mongocrypt_kms_ctx_endpoint, [:pointer, :pointer], :bool
+
+      # Get the hostname with which to connect over TLS to get information
+      # about the AWS masterkey
+      #
+      # @param [ Mongo::Crypt::KMSContext ] kms_context
+      #
+      # @raise [ Mongo::Crypt::Error ] If the response is not fed successfully
+      #
+      # @return [ String | nil ] The hostname, or nil if none exists
+      def self.kms_ctx_endpoint(kms_context)
+        ptr = FFI::MemoryPointer.new(:pointer, 1)
+
+        check_kms_ctx_status(kms_context)
+          mongocrypt_kms_ctx_endpoint(kms_context.kms_ctx_p, ptr)
+        end
+
+        str_ptr = ptr.read_pointer
+        str_ptr.null? ? nil : str_ptr.read_string.force_encoding('UTF-8')
+      end
+
       attach_function :mongocrypt_kms_ctx_bytes_needed, [:pointer], :int
       attach_function :mongocrypt_kms_ctx_feed, [:pointer, :pointer], :bool
       attach_function :mongocrypt_kms_ctx_status, [:pointer, :pointer], :bool
