@@ -73,10 +73,7 @@ module Mongo
           raise ArgumentError.new("#{@schema_map} is an invalid schema_map; schema_map must be a Hash or nil")
         end
 
-        binary = Binary.from_data(@schema_map.to_bson.to_s)
-        success = Binding.mongocrypt_setopt_schema_map(@mongocrypt, binary.ref)
-
-        raise_from_status unless success
+        Binding.setopt_schema_map(self, @schema_map)
       end
 
       # Send the logs from libmongocrypt to the Mongo::Logger
@@ -85,8 +82,7 @@ module Mongo
           @logger.send(level, msg)
         end
 
-        success = Binding.mongocrypt_setopt_log_handler(@mongocrypt, @log_callback, nil)
-        raise_from_status unless success
+        Binding.setopt_log_handler(@mongocrypt, @log_callback)
       end
 
       # We are buildling libmongocrypt without crypto functions to remove the
@@ -161,16 +157,18 @@ module Mongo
         end
 
         master_key = kms_providers[:local][:key]
+        raw_master_key = Base64.decode64(master_key)
 
-        binary = Binary.from_data(Base64.decode64(master_key))
-        success = Binding.mongocrypt_setopt_kms_provider_local(@mongocrypt, binary.ref)
-
-        raise_from_status unless success
+        Binding.setopt_kms_provider_local(self, raw_master_key)
       end
 
       # Validate and set the aws KMS provider information on the underlying
       # mongocrypt_t object and raise an exception if the operation fails
       def set_kms_providers_aws(kms_providers)
+        unless kms_providers[:aws]
+          raise ArgumentError.new('The :aws KMS provider must not be nil.')
+        end
+
         access_key_id = kms_providers[:aws][:access_key_id]
         secret_access_key = kms_providers[:aws][:secret_access_key]
 
@@ -181,15 +179,13 @@ module Mongo
           )
         end
 
-        success = Binding.mongocrypt_setopt_kms_provider_aws(@mongocrypt, access_key_id, -1, secret_access_key, -1)
-        raise_from_status unless success
+        Binding.setopt_kms_provider_aws(self, access_key_id, secret_access_key)
       end
 
       # Initialize the underlying mongocrypt_t object and raise an error if the operation fails
       def initialize_mongocrypt
-        success = Binding.mongocrypt_init(@mongocrypt)
-        # There is currently no test for this code path
-        raise_from_status unless success
+        Binding.init(self)
+        # There is currently no test for the error(?) code path
       end
 
       # Raise a Mongo::Error::CryptError based on the status of the underlying
