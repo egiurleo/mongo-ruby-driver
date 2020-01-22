@@ -93,7 +93,6 @@ module Mongo
         message = kms_helper.message
 
         host, port = endpoint.split(':')
-        byebug
 
         socket = TCPSocket.open(host, port)
         ssl_context = OpenSSL::SSL::SSLContext.new()
