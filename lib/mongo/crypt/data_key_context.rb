@@ -34,15 +34,21 @@ module Mongo
           raise ArgumentError.new('#{kms_provider} is an invalid kms provider. Valid options are "aws" and "local"')
         end
 
-        @options = options
-
         super(mongocrypt, io)
 
-        set_local_master_key if kms_provider == 'local'
-        set_aws_master_key if kms_provider == 'aws'
-        set_aws_endpoint if kms_provider == 'aws' && @options[:masterkey][:endpoint]
+        Binding.ctx_setopt_masterkey_local(self) if kms_provider == 'local'
+
+        @options = options
+        if kms_provider == 'aws'
+          set_aws_master_key
+          set_aws_endpoint if options[:masterkey][:endpoint]
+        end
 
         initialize_ctx
+      end
+
+      def ctx_p
+        @ctx
       end
 
       private
@@ -75,28 +81,20 @@ module Mongo
           raise ArgumentError.new('The :masterkey option must contain a key specified as a string')
         end
 
-        success = Binding.mongocrypt_ctx_setopt_masterkey_aws(
-          @ctx,
+        Binding.ctx_setopt_masterkey_aws(
+          self,
           @options[:masterkey][:region],
-          -1,
           @options[:masterkey][:key],
-          -1
         )
-        raise_from_status unless success
       end
 
       def set_aws_endpoint
-        success = Binding.mongocrypt_ctx_setopt_masterkey_aws_endpoint(
-          @ctx,
-          @options[:masterkey][:endpoint],
-          -1
-        )
+        Binding.ctx_setopt_masterkey_aws_endpoint(self, @options[:masterkey][:endpoint])
       end
 
       # Initializes the underlying mongocrypt_ctx_t object
       def initialize_ctx
-        success = Binding.mongocrypt_ctx_datakey_init(@ctx)
-        raise_from_status unless success
+        Binding.ctx_datakey_init(self)
       end
     end
   end
