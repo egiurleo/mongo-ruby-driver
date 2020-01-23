@@ -3,7 +3,7 @@ require 'spec_helper'
 describe 'Explicit Encryption' do
   require_libmongocrypt
 
-  let(:client) { ClientRegistry.instance.new_local_client(['localhost:27017']) }
+  let(:client) { ClientRegistry.instance.new_local_client(SpecConfig.instance.addresses) }
   let(:key_vault_namespace) { 'test.keys' }
 
   let(:client_encryption_opts) do
@@ -46,6 +46,12 @@ describe 'Explicit Encryption' do
 
   context 'value is an integer' do
     let(:value) { 42 }
+
+    it_behaves_like 'an explicit encrypter'
+  end
+
+  context 'value is an symbol' do
+    let(:value) { BSON::Symbol::Raw.new(:hello_world) }
 
     it_behaves_like 'an explicit encrypter'
   end

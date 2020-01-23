@@ -139,6 +139,10 @@ describe Mongo::ClientEncryption do
     end
 
     # Represented in as Base64 for simplicity
+<<<<<<< HEAD
+=======
+    # let(:encrypted_value) { "bwAAAAV2AGIAAAAGASzggCwAAAAAAAAAAAAAAAACk0TG2WPKVdChK2Oay9QT\nYNYHvplIMWjXWlnxAVC2hUwayNZmKBSAVgW0D9tnEMdDdxJn+OxqQq3b9MGI\nJ4pHUwVPSiNqfFTKu3OewGtKV9AA\n" }
+>>>>>>> master
     let(:encrypted_value) { "ASzggCwAAAAAAAAAAAAAAAACk0TG2WPKVdChK2Oay9QTYNYHvplIMWjXWlnx\nAVC2hUwayNZmKBSAVgW0D9tnEMdDdxJn+OxqQq3b9MGIJ4pHUwVPSiNqfFTK\nu3OewGtKV9A=\n" }
     let(:value) { 'Hello world' }
 
@@ -153,6 +157,7 @@ describe Mongo::ClientEncryption do
   describe '#encrypt' do
     include_context 'encryption/decryption'
 
+<<<<<<< HEAD
     context 'with local KMS provider' do
       include_context 'local KMS provider'
 
@@ -169,12 +174,27 @@ describe Mongo::ClientEncryption do
         expect(encrypted.type).to eq(:ciphertext)
         expect(encrypted.data).to eq(Base64.decode64(encrypted_value))
       end
+=======
+    it 'returns the correct encrypted string' do
+      encrypted = client_encryption.encrypt(
+        value,
+        {
+          key_id: data_key['_id'].data,
+          algorithm: 'AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic'
+        }
+      )
+
+      expect(encrypted).to be_a_kind_of(BSON::Binary)
+      expect(encrypted.type).to eq(:ciphertext)
+      expect(encrypted.data).to eq(Base64.decode64(encrypted_value))
+>>>>>>> master
     end
   end
 
   describe '#decrypt' do
     include_context 'encryption/decryption'
 
+<<<<<<< HEAD
     context 'with local KMS provider' do
       include_context 'local KMS provider'
 
@@ -184,6 +204,13 @@ describe Mongo::ClientEncryption do
         result = client_encryption.decrypt(encrypted)
         expect(result).to eq(value)
       end
+=======
+    it 'returns the correct unencrypted value' do
+      encrypted = BSON::Binary.new(Base64.decode64(encrypted_value), :ciphertext)
+
+      result = client_encryption.decrypt(encrypted)
+      expect(result).to eq(value)
+>>>>>>> master
     end
   end
 end
