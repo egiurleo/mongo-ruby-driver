@@ -27,7 +27,7 @@ module Mongo
       # @param [ ClientEncryption::IO ] io A instance of the IO class
       #   that implements driver I/O methods required to run the
       #   state machine
-      # @param [ String|Integer ] value A value to encrypt
+      # @param [ BSON::Document ] doc A document to encrypt
       # @param [ Hash ] options
       #
       # @option [ String ] :key_id The UUID of the data key that
@@ -37,51 +37,26 @@ module Mongo
       #   or "AEAD_AES_256_CBC_HMAC_SHA_512-Random"
       #
       # @raises [ ArgumentError|Mongo::Error::CryptError ] If invalid options are provided
-      def initialize(mongocrypt, io, value, options={})
+      def initialize(mongocrypt, io, doc, options={})
         super(mongocrypt, io)
 
-        @value = value
-        @options = options
-
-        set_key_id
-        set_algorithm
-        initialize_ctx
-      end
-
-      private
-
-      # Set the key id option on the mongocrypt_ctx_t object and raises
-      # an exception if the key_id option is somehow invalid.
-      def set_key_id
-        unless @options[:key_id]
+        unless options[:key_id]
           raise ArgumentError.new(':key_id option must not be nil')
         end
 
-        binary = Binary.from_data(@options[:key_id])
-        success = Binding.mongocrypt_ctx_setopt_key_id(@ctx, binary.ref)
+        @options = options
 
-        raise_from_status unless success
-      end
+        # Set the key id option on the mongocrypt_ctx_t object and raises
+        # an exception if the key_id option is somehow invalid.
+        Binding.ctx_setopt_key_id(self, @options[:key_id])
 
-      # Set the algorithm option on the mongocrypt_ctx_t object and raises
-      # an exception if the algorithm is invalid.
-      def set_algorithm
-        success = Binding.mongocrypt_ctx_setopt_algorithm(
-          @ctx,
-          @options[:algorithm],
-          -1
-        )
+        # Set the algorithm option on the mongocrypt_ctx_t object and raises
+        # an exception if the algorithm is invalid.
+        Binding.ctx_setopt_algorithm(self, @options[:algorithm])
 
-        raise_from_status unless success
-      end
-
-      # Initializes the mongocrypt_ctx_t object for explicit encryption and
-      # passes in the value to be encrypted as a Mongo::Crypt::Binary reference
-      def initialize_ctx
-        binary = Binary.from_data(@value)
-        success = Binding.mongocrypt_ctx_explicit_encrypt_init(@ctx, binary.ref)
-
-        raise_from_status unless success
+        # Initializes the mongocrypt_ctx_t object for explicit encryption and
+        # passes in the value to be encrypted.
+        Binding.ctx_explicit_encrypt_init(self, doc)
       end
     end
   end

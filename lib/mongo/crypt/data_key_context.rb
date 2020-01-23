@@ -47,10 +47,6 @@ module Mongo
         initialize_ctx
       end
 
-      def ctx_p
-        @ctx
-      end
-
       private
 
       # Configures the underlying mongocrypt_ctx_t object to accept local
