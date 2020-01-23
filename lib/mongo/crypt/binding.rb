@@ -222,7 +222,7 @@ module Mongo
       # @param [ Method ] log_callback
       #
       # @raise [ Mongo::CryptError ] If the callback is not set successfully
-      def setopt_log_handler(handle, log_callback)
+      def self.setopt_log_handler(handle, log_callback)
         check_status(handle) do
           mongocrypt_setopt_log_handler(handle, log_callback, nil)
         end
@@ -533,7 +533,7 @@ module Mongo
         check_ctx_status(context) do
           mongocrypt_ctx_datakey_init(context.ctx_p)
         end
-    end
+      end
 
       # Initializes the ctx for auto-encryption
       #
@@ -589,6 +589,7 @@ module Mongo
       # Initialize the Context for explicit encryption
       #
       # @param [ Mongo::Crypt::Context ] context
+      # @param [ BSON::Document ] A BSON document to encrypt
       #
       # @raise [ Error::CryptError ] If initialization fails
       def self.ctx_explicit_encrypt_init(context, doc)
@@ -612,6 +613,7 @@ module Mongo
       # Initialize the Context for auto-decryption
       #
       # @param [ Mongo::Crypt::Context ] context
+      # @param [ BSON::Document ] A BSON document to decrypt
       #
       # @raise [ Error::CryptError ] If initialization fails
       def self.ctx_decrypt_init(context, command)
@@ -639,6 +641,7 @@ module Mongo
       # Initialize the Context for explicit decryption
       #
       # @param [ Mongo::Crypt::Context ] context
+      # @param [ BSON::Document ] A BSON document to decrypt
       #
       # @raise [ Error::CryptError ] If initialization fails
       def self.ctx_explicit_decrypt_init(context, doc)
@@ -699,7 +702,7 @@ module Mongo
         # TODO since the binary references a C pointer, and ByteBuffer is
         # written in C in MRI, we could omit a copy of the data by making
         # ByteBuffer reference the string that is owned by libmongocrypt.
-        BSON::Document.from_bson(BSON::ByteBuffer.new(binary.to_string))
+        BSON::Document.from_bson(BSON::ByteBuffer.new(binary.to_string), mode: :bson)
       end
 
       # Feed a BSON reply to libmongocrypt
@@ -733,7 +736,7 @@ module Mongo
       # @return [ Boolean ] A boolean indicating the success of the operation
       attach_function :mongocrypt_ctx_mongo_done, [:pointer], :bool
 
-      # Return a pointer to a mongocrypt_kms_ctx_t object or NULL
+            # Return a pointer to a mongocrypt_kms_ctx_t object or NULL
       #
       # @param [ FFI::Pointer ] ctx A pointer to a mongocrypt_ctx_t object
       #
@@ -896,7 +899,7 @@ module Mongo
         # TODO since the binary references a C pointer, and ByteBuffer is
         # written in C in MRI, we could omit a copy of the data by making
         # ByteBuffer reference the string that is owned by libmongocrypt.
-        BSON::Document.from_bson(BSON::ByteBuffer.new(binary.to_string))
+        BSON::Document.from_bson(BSON::ByteBuffer.new(binary.to_string), mode: :bson)
       end
 
       # Destroy the reference to the mongocrypt_ctx_t object

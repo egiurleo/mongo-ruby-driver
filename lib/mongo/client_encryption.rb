@@ -22,18 +22,18 @@ module Mongo
 
     # Create a new ClientEncryption object with the provided options.
     #
-    # @param [ Mongo::Client ] client A Mongo::Client
+    # @param [ Mongo::Client ] key_vault_client A Mongo::Client
     #   that is connected to the MongoDB instance where the key vault
     #   collection is stored.
-    # @param [ Hash ] options The ClientEncryption options
+    # @param [ Hash ] options The ClientEncryption options.
     #
     # @option options [ String ] :key_vault_namespace The name of the
-    #   key vault collection in the format "database.collection"
-    # @option options [ Hash ] :kms_providers A hash of key management service
-    #   configuration information. Valid hash keys are :local or :aws. There may be
-    #   more than one KMS provider specified.
-    def initialize(client, options = {})
-      setup_encrypter(options.merge(key_vault_client: client))
+    #   key vault collection in the format "database.collection".
+    # @option options [ Hash ] :kms_providers A hash of key management service.
+    #   configuration information. Valid hash keys are :local or :aws. There
+    #   may be more than one KMS provider specified.
+    def initialize(key_vault_client, options = {})
+      setup_encrypter(options.merge(key_vault_client: key_vault_client))
     end
 
     # Generates a data key used for encryption/decryption and stores
