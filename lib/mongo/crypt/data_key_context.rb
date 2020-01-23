@@ -49,13 +49,6 @@ module Mongo
 
       private
 
-      # Configures the underlying mongocrypt_ctx_t object to accept local
-      # KMS options
-      def set_local_master_key
-        success = Binding.mongocrypt_ctx_setopt_masterkey_local(@ctx)
-        raise_from_status unless success
-      end
-
       # Configure the underlying mongocrypt_ctx_t object to accept AWS
       # KMS options
       def set_aws_master_key

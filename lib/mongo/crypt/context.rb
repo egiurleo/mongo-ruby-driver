@@ -123,14 +123,15 @@ module Mongo
 
       # TODO: documentation
       def mongocrypt_next_kms
-        kms_ctx = Binding.mongocrypt_ctx_next_kms_ctx(@ctx)
+        kms_ctx = Binding.mongocrypt_ctx_next_kms_ctx(@ctx_p)
         kms_ctx == FFI::Pointer::NULL ? nil : KMSHelper.new(kms_ctx)
       end
 
       # TODO: documentation
       def mongocrypt_done_with_kms
-        success = Binding.mongocrypt_ctx_kms_done(@ctx)
-        raise_from_status unless success
+        # Binding.ctx_kms_done(self)
+        success = Binding.mongocrypt_ctx_kms_done(@ctx_p)
+        # raise_from_status unless success
       end
     end
   end
