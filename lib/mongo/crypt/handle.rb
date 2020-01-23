@@ -246,7 +246,7 @@ module Mongo
         set_kms_providers_aws(kms_providers) if kms_providers.key?(:aws)
       end
 
-      # Validate and set the local KMS provider information on the underlying
+    # Validate and set the local KMS provider information on the underlying
       # mongocrypt_t object and raise an exception if the operation fails
       def set_kms_providers_local(kms_providers)
         unless kms_providers[:local][:key] && kms_providers[:local][:key].is_a?(String)
