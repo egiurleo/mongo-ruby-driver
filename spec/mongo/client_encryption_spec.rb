@@ -24,6 +24,14 @@ describe Mongo::ClientEncryption do
         }
       }
     end
+
+    let(:data_key) do
+      BSON::ExtJSON.parse(File.read('spec/mongo/crypt/data/key_document_local.json'))
+    end
+
+    let(:encrypted_value) do
+      "ASzggCwAAAAAAAAAAAAAAAACk0TG2WPKVdChK2Oay9QTYNYHvplIMWjXWlnx\nAVC2hUwayNZmKBSAVgW0D9tnEMdDdxJn+OxqQq3b9MGIJ4pHUwVPSiNqfFTK\nu3OewGtKV9A=\n"
+    end
   end
 
   shared_context 'AWS KMS provider' do
@@ -34,6 +42,14 @@ describe Mongo::ClientEncryption do
           secret_access_key: ENV['FLE_AWS_SECRET_ACCESS_KEY']
         }
       }
+    end
+
+    let(:data_key) do
+      BSON::ExtJSON.parse(File.read('spec/mongo/crypt/data/key_document_aws.json'))
+    end
+
+    let(:encrypted_value) do
+      "AXJ8fS5tr0ybsHekFF59rg0Cdgq/sw1Vg0J9f6MGIYFN13xF/UiFOTIvT1GU\nfqufW4OROTLDVLUH2dJkLxpKseQ9voqtGuIUYxRYN5K9u9EGua25oYKQbUXr\nZDlPvwnIMzA=\n"
     end
   end
 
@@ -134,12 +150,7 @@ describe Mongo::ClientEncryption do
   end
 
   shared_context 'encryption/decryption' do
-    let(:data_key) do
-      BSON::ExtJSON.parse(File.read('spec/mongo/crypt/data/key_document.json'))
-    end
-
     # Represented in as Base64 for simplicity
-    let(:encrypted_value) { "ASzggCwAAAAAAAAAAAAAAAACk0TG2WPKVdChK2Oay9QTYNYHvplIMWjXWlnx\nAVC2hUwayNZmKBSAVgW0D9tnEMdDdxJn+OxqQq3b9MGIJ4pHUwVPSiNqfFTK\nu3OewGtKV9A=\n" }
     let(:value) { 'Hello world' }
 
     before do
@@ -170,10 +181,39 @@ describe Mongo::ClientEncryption do
         expect(encrypted.data).to eq(Base64.decode64(encrypted_value))
       end
     end
+
+    context 'with AWS KMS provider' do
+      include_context 'AWS KMS provider'
+
+      it 'returns the correct encrypted string' do
+        encrypted = client_encryption.encrypt(
+          value,
+          {
+            key_id: data_key['_id'].data,
+            algorithm: 'AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic'
+          }
+        )
+
+        expect(encrypted).to be_a_kind_of(BSON::Binary)
+        expect(encrypted.type).to eq(:ciphertext)
+        expect(encrypted.data).to eq(Base64.decode64(encrypted_value))
+      end
+    end
   end
 
   describe '#decrypt' do
     include_context 'encryption/decryption'
+
+    context 'with AWS KMS provider' do
+      include_context 'AWS KMS provider'
+
+      it 'returns the correct unencrypted value' do
+        encrypted = BSON::Binary.new(Base64.decode64(encrypted_value), :ciphertext)
+
+        result = client_encryption.decrypt(encrypted)
+        expect(result).to eq(value)
+      end
+    end
 
     context 'with local KMS provider' do
       include_context 'local KMS provider'
