@@ -5,9 +5,6 @@ describe Mongo::Client do
   require_enterprise
   clean_slate
 
-  let(:schema_map) { BSON::ExtJSON.parse(File.read('spec/mongo/crypt/data/schema_map.json')) }
-  let(:key) { "Mng0NCt4ZHVUYUJCa1kxNkVyNUR1QURhZ2h2UzR2d2RrZzh0cFBwM3R6NmdWMDFBMUN3YkQ5aXRRMkhGRGdQV09wOGVNYUMxT2k3NjZKelhaQmRCZGJkTXVyZG9uSjFk" }
-
   let(:client) { new_local_client('mongodb://localhost:27017') }
 
   let(:encryption_client) do
@@ -15,10 +12,6 @@ describe Mongo::Client do
       'mongodb://localhost:27017/test',
       { auto_encryption_options: auto_encryption_options.merge(mongocryptd_server_selection_timeout: 3) }
     )
-  end
-
-  let(:data_key) do
-    BSON::ExtJSON.parse(File.read('spec/mongo/crypt/data/key_document.json'))
   end
 
   let(:ssn) { '123-456-7890' }
@@ -48,6 +41,39 @@ describe Mongo::Client do
         }
       ]
     )
+  end
+
+  shared_context 'with local KMS provider' do
+    let(:data_key) do
+      BSON::ExtJSON.parse(File.read('spec/mongo/crypt/data/key_document_local.json'))
+    end
+
+    let(:masterkey) do
+      "Mng0NCt4ZHVUYUJCa1kxNkVyNUR1QURhZ2h2UzR2d2RrZzh0cFBwM3R6NmdWMDFBMUN3YkQ5aXRRMkhGRGdQV09wOGVNYUMxT2k3NjZKelhaQmRCZGJkTXVyZG9uSjFk"
+    end
+
+    let(:kms_providers) do
+      { local: { key: masterkey } }
+    end
+
+    let(:schema_map) { BSON::ExtJSON.parse(File.read('spec/mongo/crypt/data/schema_map_local.json')) }
+  end
+
+  shared_context 'with AWS KMS provider' do
+    let(:data_key) do
+      BSON::ExtJSON.parse(File.read('spec/mongo/crypt/data/key_document_aws.json'))
+    end
+
+    let(:kms_providers) do
+      {
+        aws: {
+          access_key_id: ENV['FLE_AWS_ACCESS_KEY'],
+          secret_access_key: ENV['FLE_AWS_SECRET_ACCESS_KEY']
+        }
+      }
+    end
+
+    let(:schema_map) { BSON::ExtJSON.parse(File.read('spec/mongo/crypt/data/schema_map_aws.json')) }
   end
 
   shared_context 'with jsonSchema validator' do
@@ -81,23 +107,45 @@ describe Mongo::Client do
 
     let(:auto_encryption_options) do
       {
-        kms_providers: { local: { key: key } },
+        kms_providers: kms_providers,
         key_vault_namespace: 'admin.datakeys',
         schema_map: { 'test.users': schema_map }
       }
     end
 
-    describe '#encrypt' do
-      it 'replaces the ssn field with a BSON::Binary' do
-        result = encryption_client.encrypt('test', command)
-        expect(result).to eq(encrypted_command)
+    context 'with local KMS provider' do
+      include_context 'with local KMS provider'
+
+      describe '#encrypt' do
+        it 'replaces the ssn field with a BSON::Binary' do
+          result = encryption_client.encrypt('test', command)
+          expect(result).to eq(encrypted_command)
+        end
+      end
+
+      describe '#decrypt' do
+        it 'returns the unencrypted document' do
+          result = encryption_client.decrypt(encrypted_command)
+          expect(result).to eq(command)
+        end
       end
     end
 
-    describe '#decrypt' do
-      it 'returns the unencrypted document' do
-        result = encryption_client.decrypt(encrypted_command)
-        expect(result).to eq(command)
+    context 'with AWS KMS provider' do
+      include_context 'with AWS KMS provider'
+
+      describe '#encrypt' do
+        it 'replaces the ssn field with a BSON::Binary' do
+          result = encryption_client.encrypt('test', command)
+          expect(result).to eq(encrypted_command)
+        end
+      end
+
+      describe '#decrypt' do
+        it 'returns the unencrypted document' do
+          result = encryption_client.decrypt(encrypted_command)
+          expect(result).to eq(command)
+        end
       end
     end
   end
@@ -107,22 +155,44 @@ describe Mongo::Client do
 
     let(:auto_encryption_options) do
       {
-        kms_providers: { local: { key: key } },
+        kms_providers: kms_providers,
         key_vault_namespace: 'admin.datakeys'
       }
     end
 
-    describe '#encrypt' do
-      it 'replaces the ssn field with a BSON::Binary' do
-        result = encryption_client.encrypt('test', command)
-        expect(result).to eq(encrypted_command)
+    context 'with local KMS provider' do
+      include_context 'with local KMS provider'
+
+      describe '#encrypt' do
+        it 'replaces the ssn field with a BSON::Binary' do
+          result = encryption_client.encrypt('test', command)
+          expect(result).to eq(encrypted_command)
+        end
+      end
+
+      describe '#decrypt' do
+        it 'returns the unencrypted document' do
+          result = encryption_client.decrypt(encrypted_command)
+          expect(result).to eq(command)
+        end
       end
     end
 
-    describe '#decrypt' do
-      it 'returns the unencrypted document' do
-        result = encryption_client.decrypt(encrypted_command)
-        expect(result).to eq(command)
+    context 'with AWS KMS provider' do
+      include_context 'with AWS KMS provider'
+
+      describe '#encrypt' do
+        it 'replaces the ssn field with a BSON::Binary' do
+          result = encryption_client.encrypt('test', command)
+          expect(result).to eq(encrypted_command)
+        end
+      end
+
+      describe '#decrypt' do
+        it 'returns the unencrypted document' do
+          result = encryption_client.decrypt(encrypted_command)
+          expect(result).to eq(command)
+        end
       end
     end
   end
@@ -132,22 +202,44 @@ describe Mongo::Client do
 
     let(:auto_encryption_options) do
       {
-        kms_providers: { local: { key: key } },
+        kms_providers: kms_providers,
         key_vault_namespace: 'admin.datakeys',
       }
     end
 
-    describe '#encrypt' do
-      it 'does not perform encryption' do
-        result = encryption_client.encrypt('test', command)
-        expect(result).to eq(command)
+    context 'with local KMS provider' do
+      include_context 'with local KMS provider'
+
+      describe '#encrypt' do
+        it 'replaces the ssn field with a BSON::Binary' do
+          result = encryption_client.encrypt('test', command)
+          expect(result).to eq(encrypted_command)
+        end
+      end
+
+      describe '#decrypt' do
+        it 'returns the unencrypted document' do
+          result = encryption_client.decrypt(encrypted_command)
+          expect(result).to eq(command)
+        end
       end
     end
 
-    describe '#decrypt' do
-      it 'still performs decryption' do
-        result = encryption_client.decrypt(encrypted_command)
-        expect(result).to eq(command)
+    context 'with AWS KMS provider' do
+      include_context 'with AWS KMS provider'
+
+      describe '#encrypt' do
+        it 'replaces the ssn field with a BSON::Binary' do
+          result = encryption_client.encrypt('test', command)
+          expect(result).to eq(encrypted_command)
+        end
+      end
+
+      describe '#decrypt' do
+        it 'returns the unencrypted document' do
+          result = encryption_client.decrypt(encrypted_command)
+          expect(result).to eq(command)
+        end
       end
     end
   end
