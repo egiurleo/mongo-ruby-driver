@@ -19,51 +19,29 @@ module Mongo
     class KMSContext
       # TODO: documentation
       def initialize(kms_ctx)
-        @kms_ctx = kms_ctx
+        @kms_ctx_p = kms_ctx
       end
+
+      attr_reader :kms_ctx_p
 
       # TODO: endpoint
       def endpoint
-        # FFI::MemoryPointer automatically frees memory when it goes out of scope
-        ptr = FFI::MemoryPointer.new(:pointer, 1)
-        Binding.mongocrypt_kms_ctx_endpoint(@kms_ctx, ptr)
-
-        str_ptr = ptr.read_pointer
-        str_ptr.null? ? nil : str_ptr.read_string.force_encoding('UTF-8')
+        Binding.kms_ctx_endpoint(self)
       end
 
       # TODO: documentation
       def message
-        binary = Binary.new
-
-        success = Binding.mongocrypt_kms_ctx_message(@kms_ctx, binary.ref)
-        raise_from_status unless success
-
-        binary.to_string
+        Binding.kms_ctx_message(self)
       end
 
       # TODO: documentation
       def bytes_needed
-        Binding.mongocrypt_kms_ctx_bytes_needed(@kms_ctx)
+        Binding.kms_ctx_bytes_needed(self)
       end
 
       # TODO: documentation
       def feed(data)
-        binary = Binary.from_data(data.to_s)
-
-        success = Binding.mongocrypt_kms_ctx_feed(@kms_ctx, binary.ref)
-        raise_from_status unless success
-
-        true
-      end
-
-      private
-
-      def raise_from_status
-        status = Status.new
-
-        Binding.mongocrypt_kms_ctx_status(@kms_ctx, status.ref)
-        status.raise_crypt_error
+        Binding.kms_ctx_feed(self, data)
       end
     end
   end

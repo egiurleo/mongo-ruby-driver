@@ -750,7 +750,7 @@ module Mongo
       # @return [ Mongo::Crypt::KMSContext | nil ] The KMSContext needed to
       #   fetch an AWS masterkey or nil, if no KMSContext is needed
       def self.ctx_next_kms_ctx(context)
-        kms_ctx_p = mongocrypt_ctx_next_kms_ctx(context)
+        kms_ctx_p = mongocrypt_ctx_next_kms_ctx(context.ctx_p)
 
         if kms_ctx_p.null?
           nil
@@ -781,10 +781,10 @@ module Mongo
         binary = Binary.new
 
         check_kms_ctx_status(kms_context) do
-          mongocrypt_kms_ctx_message(kms_context.kms_ctx_p, binary)
+          mongocrypt_kms_ctx_message(kms_context.kms_ctx_p, binary.ref)
         end
 
-        return binary.to_s
+        return binary.to_string
       end
 
       # Get the hostname with which to connect over TLS to get information about
@@ -844,8 +844,8 @@ module Mongo
       # TODO: documentation
       def self.kms_ctx_feed(kms_context, bytes)
         check_kms_ctx_status(kms_context) do
-          Binary.wrap_string(bytes) do |binary|
-            mongocrypt_kms_ctx_feed(kms_context.kms_ctx_p, binary.ref)
+          Binary.wrap_string(bytes) do |bytes_p|
+            mongocrypt_kms_ctx_feed(kms_context.kms_ctx_p, bytes_p)
           end
         end
       end
@@ -858,7 +858,7 @@ module Mongo
         unless yield
           status = Status.new
 
-          mongocrypt_kms_ctx_status(kms_context.ref, status.ref)
+          mongocrypt_kms_ctx_status(kms_context.kms_ctx_p, status.ref)
           status.raise_crypt_error
         end
       end

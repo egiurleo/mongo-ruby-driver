@@ -99,11 +99,11 @@ module Mongo
 
             mongocrypt_done
           when :need_kms
-            while kms_context = mongocrypt_next_kms do
+            while kms_context = Binding.ctx_next_kms_ctx(self) do
               @encryption_io.feed_kms(kms_context)
             end
 
-            mongocrypt_done_with_kms
+            Binding.ctx_kms_done(self)
           end
         end
       end
@@ -119,19 +119,6 @@ module Mongo
       # The result param should be a BSON::Document.
       def mongocrypt_feed(doc)
         Binding.ctx_mongo_feed(self, doc)
-      end
-
-      # TODO: documentation
-      def mongocrypt_next_kms
-        kms_ctx = Binding.mongocrypt_ctx_next_kms_ctx(@ctx_p)
-        kms_ctx == FFI::Pointer::NULL ? nil : KMSContext.new(kms_ctx)
-      end
-
-      # TODO: documentation
-      def mongocrypt_done_with_kms
-        # Binding.ctx_kms_done(self)
-        success = Binding.mongocrypt_ctx_kms_done(@ctx_p)
-        # raise_from_status unless success
       end
     end
   end
