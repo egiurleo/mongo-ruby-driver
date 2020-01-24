@@ -87,7 +87,13 @@ module Mongo
         return response.first
       end
 
-      # TODO: documentation
+      # Get information about the AWS encryption key and feed it to the the
+      # KMSContext object
+      #
+      # @param [ Mongo::Crypt::KMSContext ] kms_context A KMSContext object
+      #   corresponding to one AWS KMS data key. Contains information about
+      #   the endpoint at which to establish a TLS connection and the message
+      #   to send on that connection.
       def feed_kms(kms_context)
         endpoint = kms_context.endpoint
         message = kms_context.message

@@ -15,31 +15,50 @@
 module Mongo
   module Crypt
 
-    # TODO: documentation
+    # Wraps a libmongocrypt mongocrypt_kms_ctx_t object. Contains information
+    # about making an HTTP request to fetch information about a KMS
+    # data key.
     class KMSContext
-      # TODO: documentation
+      # Create a new KMSContext object.
+      #
+      # @param [ FFI::Pointer ] kms_ctx A pointer to a mongocrypt_kms_ctx_t
+      #   object. This object is managed by the mongocrypt_ctx_t object that
+      #   created it; this class is not responsible for de-allocating resources.
       def initialize(kms_ctx)
         @kms_ctx_p = kms_ctx
       end
 
+      # Return the pointer to the underlying mongocrypt_kms_ctx_t object.
+      #
+      # @return [ FFI::Pointer ] A pointer to a mongocrypt_kms_ctx_t object.
       attr_reader :kms_ctx_p
 
-      # TODO: endpoint
+      # Return the endpoint at which to make the HTTP request.
+      #
+      # @return [ String ] The endpoint.
       def endpoint
         Binding.kms_ctx_endpoint(self)
       end
 
-      # TODO: documentation
+      # Return the HTTP message to send to fetch information about the relevant
+      # KMS data key.
+      #
+      # @return [ String ] The HTTP message.
       def message
         Binding.kms_ctx_message(self)
       end
 
-      # TODO: documentation
+      # Return the number of bytes still needed by libmongocrypt to complete
+      # the request for information about the AWS data key.
+      #
+      # @return [ Integer ] The number of bytes needed.
       def bytes_needed
         Binding.kms_ctx_bytes_needed(self)
       end
 
-      # TODO: documentation
+      # Feed a response from the HTTP request to libmongocrypt.
+      #
+      # @param [ String ] data Data to feed to libmongocrypt.
       def feed(data)
         Binding.kms_ctx_feed(self, data)
       end
