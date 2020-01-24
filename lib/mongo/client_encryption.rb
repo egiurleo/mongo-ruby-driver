@@ -29,7 +29,7 @@ module Mongo
     #
     # @option options [ String ] :key_vault_namespace The name of the
     #   key vault collection in the format "database.collection".
-    # @option options [ Hash ] :kms_providers A hash of key management service.
+    # @option options [ Hash ] :kms_providers A hash of key management service
     #   configuration information. Valid hash keys are :local or :aws. There
     #   may be more than one KMS provider specified.
     def initialize(key_vault_client, options = {})

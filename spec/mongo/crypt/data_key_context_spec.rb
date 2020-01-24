@@ -23,10 +23,22 @@ describe Mongo::Crypt::DataKeyContext do
 
   let(:io) { double("Mongo::Crypt::EncryptionIO") }
 
-  let(:context) { described_class.new(mongocrypt, io, 'local') }
+  let(:context) { described_class.new(mongocrypt, io, kms_provider, options) }
+  let(:kms_provider) { 'local' }
+  let(:options) { {} }
 
   describe '#initialize' do
-    context 'with local kms provider' do
+    context 'with invalid kms provider'do
+      let(:kms_provider) { 'invalid' }
+
+      it 'raises an exception' do
+        expect do
+          context
+        end.to raise_exception(/invalid is an invalid kms provider/)
+      end
+    end
+
+    context 'with local kms provider and empty options' do
       it 'does not raise an exception' do
         expect do
           context
@@ -35,7 +47,7 @@ describe Mongo::Crypt::DataKeyContext do
     end
 
     context 'with aws kms provider' do
-      let(:context) { described_class.new(mongocrypt, io, 'aws', options) }
+      let(:kms_provider) { 'aws' }
 
       context 'with empty options' do
         let(:options) { {} }
@@ -43,7 +55,7 @@ describe Mongo::Crypt::DataKeyContext do
         it 'raises an exception' do
           expect do
             context
-          end.to raise_error(ArgumentError, /:masterkey option cannot be nil/)
+          end.to raise_error(ArgumentError, /masterkey options cannot be nil/)
         end
       end
 
@@ -53,7 +65,7 @@ describe Mongo::Crypt::DataKeyContext do
         it 'raises an exception' do
           expect do
             context
-          end.to raise_error(ArgumentError, /:masterkey option must be a Hash/)
+          end.to raise_error(ArgumentError, /key is an invalid masterkey option/)
         end
       end
 
@@ -63,17 +75,27 @@ describe Mongo::Crypt::DataKeyContext do
         it 'raises an exception' do
           expect do
             context
-          end.to raise_error(ArgumentError, /:masterkey option must contain a region/)
+          end.to raise_error(ArgumentError, /The :region key of the :masterkey options Hash cannot be nil/)
         end
       end
 
-      context 'with an invalid region option' do
+      context 'with a nil region option' do
         let(:options) { { masterkey: { region: nil } } }
 
         it 'raises an exception' do
           expect do
             context
-          end.to raise_error(ArgumentError, /:masterkey option must contain a region/)
+          end.to raise_error(ArgumentError, /The :region key of the :masterkey options Hash cannot be nil/)
+        end
+      end
+
+      context 'with an invalid region option' do
+        let(:options) { { masterkey: { region: 5 } } }
+
+        it 'raises an exception' do
+          expect do
+            context
+          end.to raise_error(ArgumentError, /5 is an invalid AWS masterkey region/)
         end
       end
 
@@ -83,12 +105,42 @@ describe Mongo::Crypt::DataKeyContext do
         it 'raises an exception' do
           expect do
             context
-          end.to raise_error(ArgumentError, /:masterkey option must contain a key/)
+          end.to raise_error(ArgumentError, /The :key key of the :masterkey options Hash cannot be nil/)
+        end
+      end
+
+      context 'with an invalid key option' do
+        let(:options) { { masterkey: { region: 'us-east-2', key: 5 } } }
+
+        it 'raises an exception' do
+          expect do
+            context
+          end.to raise_error(ArgumentError, /5 is an invalid AWS masterkey key/)
+        end
+      end
+
+      context 'with an invalid endpoint option' do
+        let(:options) { { masterkey: { region: 'us-east-2', key: 'arn', endpoint: 5 } } }
+
+        it 'raises an exception' do
+          expect do
+            context
+          end.to raise_error(ArgumentError, /5 is an invalid AWS masterkey endpoint/)
         end
       end
 
       context 'with valid options' do
         let(:options) { { masterkey: { region: 'us-east-2', key: 'arn' } } }
+
+        it 'does not raise an exception' do
+          expect do
+            context
+          end.not_to raise_error
+        end
+      end
+
+      context 'with valid endpoint' do
+        let(:options) { { masterkey: { region: 'us-east-2', key: 'arn', endpoint: 'endpoint/to/kms' } } }
 
         it 'does not raise an exception' do
           expect do

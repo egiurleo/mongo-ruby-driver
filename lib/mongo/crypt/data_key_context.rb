@@ -29,9 +29,19 @@ module Mongo
       #   driver I/O on behalf of libmongocrypt
       # @param [ String ] kms_provider The KMS provider to use. Options are
       #   "aws" and "local".
+      # @param [ Hash ] options Data key creation options.
+      #
+      # @option [ Hash ] :masterkey A Hash of options related to the AWS
+      #   KMS provider option. Required if kms_provider is "aws".
+      #   - :region [ String ] The The AWS region of the master key (required).
+      #   - :key [ String ] The Amazon Resource Name (ARN) of the master key (required).
+      #   - :endpoint [ String ] An alternate host to send KMS requests to (optional).
       def initialize(mongocrypt, io, kms_provider, options={})
         unless ['aws', 'local'].include?(kms_provider)
-          raise ArgumentError.new('#{kms_provider} is an invalid kms provider. Valid options are "aws" and "local"')
+          raise ArgumentError.new(
+            "#{kms_provider} is an invalid kms provider. " +
+            "Valid options are 'aws' and 'local'"
+          )
         end
 
         super(mongocrypt, io)
@@ -39,6 +49,7 @@ module Mongo
         Binding.ctx_setopt_masterkey_local(self) if kms_provider == 'local'
 
         @options = options
+
         if kms_provider == 'aws'
           set_aws_master_key
           set_aws_endpoint if options[:masterkey][:endpoint]
@@ -53,21 +64,43 @@ module Mongo
       # KMS options
       def set_aws_master_key
         unless @options[:masterkey]
-          raise ArgumentError.new('The :masterkey option cannot be nil')
+          raise ArgumentError.new('The masterkey options cannot be nil')
         end
 
         unless @options[:masterkey].is_a?(Hash)
-          raise ArgumentError.new('The :masterkey option must be a Hash')
+          raise ArgumentError.new(
+            "#{@options[:masterkey]} is an invalid masterkey option. " +
+            "The masterkey option must be a Hash in the format " +
+            "{ region: 'AWS-REGION', key: 'AWS-KEY-ARN' }"
+          )
         end
 
-        # TODO: better error message
-        unless @options[:masterkey][:region] && @options[:masterkey][:region].is_a?(String)
-          raise ArgumentError.new('The :masterkey option must contain a region specified as a string')
+        region = @options[:masterkey][:region]
+        unless region
+          raise ArgumentError.new(
+            'The :region key of the :masterkey options Hash cannot be nil'
+          )
         end
 
-        # TODO: better error message
-        unless @options[:masterkey][:key] && @options[:masterkey][:key].is_a?(String)
-          raise ArgumentError.new('The :masterkey option must contain a key specified as a string')
+        unless region.is_a?(String)
+          raise ArgumentError.new(
+            "#{@options[:masterkey][:region]} is an invalid AWS masterkey region. " +
+            "The :region key of the :masterkey options Hash must be a String"
+          )
+        end
+
+        key = @options[:masterkey][:key]
+        unless key
+          raise ArgumentError.new(
+            'The :key key of the :masterkey options Hash cannot be nil'
+          )
+        end
+
+        unless key.is_a?(String)
+          raise ArgumentError.new(
+            "#{@options[:masterkey][:key]} is an invalid AWS masterkey key. " +
+            "The :key key of the :masterkey options Hash must be a String"
+          )
         end
 
         Binding.ctx_setopt_masterkey_aws(
@@ -78,6 +111,13 @@ module Mongo
       end
 
       def set_aws_endpoint
+        unless @options[:masterkey][:endpoint].is_a?(String)
+          raise ArgumentError.new(
+            "#{@options[:masterkey][:endpoint]} is an invalid AWS masterkey endpoint. " +
+            "The masterkey endpoint option must be a String"
+          )
+        end
+
         Binding.ctx_setopt_masterkey_aws_endpoint(self, @options[:masterkey][:endpoint])
       end
 
