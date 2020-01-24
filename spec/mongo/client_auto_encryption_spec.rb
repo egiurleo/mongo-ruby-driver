@@ -36,7 +36,7 @@ describe Mongo::Client do
     command.merge(
       'documents' => [
         {
-          'ssn' => BSON::Binary.new(Base64.decode64("ASzggCwAAAAAAAAAAAAAAAAC/OvUvE0N5eZ5vhjcILtGKZlxovGhYJduEfsR\n7NiH68FttXzHYqT0DKgvn3QjjTbS/4SPfBEYrMIS10Uzf9R1Ky4D5a19mYCp\nmv76Z8Rzdmo=\n"), :ciphertext),
+          'ssn' => BSON::Binary.new(Base64.decode64(encrypted_ssn), :ciphertext),
           '_id' => BSON::ObjectId('5e16516e781d8a89b94df6df')
         }
       ]
@@ -57,6 +57,7 @@ describe Mongo::Client do
     end
 
     let(:schema_map) { BSON::ExtJSON.parse(File.read('spec/mongo/crypt/data/schema_map_local.json')) }
+    let(:encrypted_ssn) { "ASzggCwAAAAAAAAAAAAAAAAC/OvUvE0N5eZ5vhjcILtGKZlxovGhYJduEfsR\n7NiH68FttXzHYqT0DKgvn3QjjTbS/4SPfBEYrMIS10Uzf9R1Ky4D5a19mYCp\nmv76Z8Rzdmo=\n" }
   end
 
   shared_context 'with AWS KMS provider' do
@@ -74,6 +75,7 @@ describe Mongo::Client do
     end
 
     let(:schema_map) { BSON::ExtJSON.parse(File.read('spec/mongo/crypt/data/schema_map_aws.json')) }
+    let(:encrypted_ssn) { "AXJ8fS5tr0ybsHekFF59rg0CHM2kEepvUpVQqlxP+Pfcxoeprc9ZHClSiRfJ\n4YtZnRm4xtDJxBQG1drHkENIBxt8sKMAhRk4uV2gV4oqHzkNHbCPKjVQ/oyR\nGmZHS82h5Pw=\n" }
   end
 
   shared_context 'with jsonSchema validator' do
@@ -211,14 +213,14 @@ describe Mongo::Client do
       include_context 'with local KMS provider'
 
       describe '#encrypt' do
-        it 'replaces the ssn field with a BSON::Binary' do
+        it 'does not perform encryption' do
           result = encryption_client.encrypt('test', command)
-          expect(result).to eq(encrypted_command)
+          expect(result).to eq(command)
         end
       end
 
       describe '#decrypt' do
-        it 'returns the unencrypted document' do
+        it 'still performs decryption' do
           result = encryption_client.decrypt(encrypted_command)
           expect(result).to eq(command)
         end
@@ -229,14 +231,14 @@ describe Mongo::Client do
       include_context 'with AWS KMS provider'
 
       describe '#encrypt' do
-        it 'replaces the ssn field with a BSON::Binary' do
+        it 'does not perform encryption' do
           result = encryption_client.encrypt('test', command)
-          expect(result).to eq(encrypted_command)
+          expect(result).to eq(command)
         end
       end
 
       describe '#decrypt' do
-        it 'returns the unencrypted document' do
+        it 'still performs decryption' do
           result = encryption_client.decrypt(encrypted_command)
           expect(result).to eq(command)
         end
