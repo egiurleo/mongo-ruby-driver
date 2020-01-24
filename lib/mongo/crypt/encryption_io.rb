@@ -92,20 +92,25 @@ module Mongo
         endpoint = kms_context.endpoint
         message = kms_context.message
 
+        socket_timeout = 10
+
         host, port = endpoint.split(':')
 
-        socket = TCPSocket.open(host, port)
-        ssl_context = OpenSSL::SSL::SSLContext.new()
-        ssl_socket = OpenSSL::SSL::SSLSocket.new(socket, ssl_context)
-        ssl_socket.connect
+        # TODO: do some host/port testing
 
-        ssl_socket.puts(message)
+        ssl_socket = Socket::SSL.new(host, port, host, socket_timeout, Socket::PF_INET)
+        ssl_socket.write(message)
 
-        bytes_needed = kms_context.bytes_needed
-        while bytes_needed > 0 do
-          bytes = ssl_socket.sysread(bytes_needed)
-          kms_context.feed(bytes)
-          bytes_needed = kms_context.bytes_needed
+        num_bytes_needed = kms_context.bytes_needed
+
+        while num_bytes_needed > 0
+          bytes = []
+          while !ssl_socket.eof?
+            bytes << ssl_socket.readbyte
+          end
+
+          kms_context.feed(bytes.pack('C*'))
+          num_bytes_needed = kms_context.bytes_needed
         end
       end
     end
