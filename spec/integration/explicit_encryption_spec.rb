@@ -8,33 +8,78 @@ describe 'Explicit Encryption' do
 
   let(:client_encryption_opts) do
     {
-      kms_providers: {
-        local: { key: Base64.encode64("ru\xfe\x00" * 24) }
-      },
+      kms_providers: kms_providers,
       key_vault_namespace: key_vault_namespace
     }
   end
 
   shared_examples_for 'an explicit encrypter' do
-    it 'encrypts and decrypts the value' do
-      client_encryption = Mongo::ClientEncryption.new(
-        client,
-        client_encryption_opts
-      )
+    context 'with local kms_providers' do
+      let(:kms_providers) do
+        { local: { key: Base64.encode64("ru\xfe\x00" * 24) } }
+      end
 
-      data_key_id = client_encryption.create_data_key('local')
+      it 'encrypts and decrypts the value' do
+        client_encryption = Mongo::ClientEncryption.new(
+          client,
+          client_encryption_opts
+        )
 
-      encrypted = client_encryption.encrypt(
-        value,
+        data_key_id = client_encryption.create_data_key('local')
+
+        encrypted = client_encryption.encrypt(
+          value,
+          {
+            key_id: data_key_id,
+            algorithm: 'AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic',
+          }
+        )
+
+        decrypted = client_encryption.decrypt(encrypted)
+        expect(decrypted).to eq(value)
+        expect(decrypted).to be_a_kind_of(value.class)
+      end
+    end
+
+    context 'with AWS kms_providers' do
+      let(:kms_providers) do
         {
-          key_id: data_key_id,
-          algorithm: 'AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic',
+          aws: {
+            access_key_id: ENV['FLE_AWS_ACCESS_KEY'],
+            secret_access_key: ENV['FLE_AWS_SECRET_ACCESS_KEY']
+          }
         }
-      )
+      end
 
-      decrypted = client_encryption.decrypt(encrypted)
-      expect(decrypted).to eq(value)
-      expect(decrypted).to be_a_kind_of(value.class)
+      it 'encrypts and decrypts the value' do
+        client_encryption = Mongo::ClientEncryption.new(
+          client,
+          client_encryption_opts
+        )
+
+        data_key_id = client_encryption.create_data_key(
+          'aws',
+          {
+            masterkey: {
+              region: 'us-east-2',
+              key: 'arn:aws:kms:us-east-2:947766748115:key/b87d5b05-1c5e-4a72-8658-68488dc35fd1',
+              endpoint: 'kms.us-east-2.amazonaws.com:443'
+            }
+          }
+        )
+
+        encrypted = client_encryption.encrypt(
+          value,
+          {
+            key_id: data_key_id,
+            algorithm: 'AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic',
+          }
+        )
+
+        decrypted = client_encryption.decrypt(encrypted)
+        expect(decrypted).to eq(value)
+        expect(decrypted).to be_a_kind_of(value.class)
+      end
     end
   end
 
