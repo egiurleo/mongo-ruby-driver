@@ -99,8 +99,8 @@ module Mongo
 
             mongocrypt_done
           when :need_kms
-            while kms_helper = mongocrypt_next_kms do
-              @encryption_io.feed_kms(kms_helper)
+            while kms_context = mongocrypt_next_kms do
+              @encryption_io.feed_kms(kms_context)
             end
 
             mongocrypt_done_with_kms
@@ -124,7 +124,7 @@ module Mongo
       # TODO: documentation
       def mongocrypt_next_kms
         kms_ctx = Binding.mongocrypt_ctx_next_kms_ctx(@ctx_p)
-        kms_ctx == FFI::Pointer::NULL ? nil : KMSHelper.new(kms_ctx)
+        kms_ctx == FFI::Pointer::NULL ? nil : KMSContext.new(kms_ctx)
       end
 
       # TODO: documentation

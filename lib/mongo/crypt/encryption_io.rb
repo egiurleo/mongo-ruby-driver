@@ -88,9 +88,9 @@ module Mongo
       end
 
       # TODO: documentation
-      def feed_kms(kms_helper)
-        endpoint = kms_helper.endpoint
-        message = kms_helper.message
+      def feed_kms(kms_context)
+        endpoint = kms_context.endpoint
+        message = kms_context.message
 
         host, port = endpoint.split(':')
 
@@ -101,11 +101,11 @@ module Mongo
 
         ssl_socket.puts(message)
 
-        bytes_needed = kms_helper.bytes_needed
+        bytes_needed = kms_context.bytes_needed
         while bytes_needed > 0 do
           bytes = ssl_socket.sysread(bytes_needed)
-          kms_helper.feed(bytes)
-          bytes_needed = kms_helper.bytes_needed
+          kms_context.feed(bytes)
+          bytes_needed = kms_context.bytes_needed
         end
       end
     end

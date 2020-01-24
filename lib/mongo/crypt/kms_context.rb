@@ -16,7 +16,7 @@ module Mongo
   module Crypt
 
     # TODO: documentation
-    class KMSHelper
+    class KMSContext
       # TODO: documentation
       def initialize(kms_ctx)
         @kms_ctx = kms_ctx
