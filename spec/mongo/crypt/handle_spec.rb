@@ -5,7 +5,7 @@ require 'support/crypt_helper'
 
 RSpec.configure do |config|
   config.extend(LiteConstraints)
-  config.extend(CryptHelper)
+  config.include(CryptHelper)
 end
 
 describe Mongo::Crypt::Handle do
