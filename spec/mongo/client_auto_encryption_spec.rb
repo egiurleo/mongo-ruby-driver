@@ -1,4 +1,10 @@
 require 'spec_helper'
+require 'support/shared/crypt_helper'
+
+RSpec.configure do |config|
+  config.extend(LiteConstraints)
+  config.include(CryptHelper)
+end
 
 describe Mongo::Client do
   require_libmongocrypt
@@ -43,39 +49,14 @@ describe Mongo::Client do
     )
   end
 
-  shared_context 'with local KMS provider' do
-    let(:data_key) do
-      BSON::ExtJSON.parse(File.read('spec/mongo/crypt/data/key_document_local.json'))
-    end
-
-    let(:masterkey) do
-      "Mng0NCt4ZHVUYUJCa1kxNkVyNUR1QURhZ2h2UzR2d2RrZzh0cFBwM3R6NmdWMDFBMUN3YkQ5aXRRMkhGRGdQV09wOGVNYUMxT2k3NjZKelhaQmRCZGJkTXVyZG9uSjFk"
-    end
-
-    let(:kms_providers) do
-      { local: { key: masterkey } }
-    end
-
-    let(:schema_map) { BSON::ExtJSON.parse(File.read('spec/mongo/crypt/data/schema_map_local.json')) }
+  shared_context 'with local KMS options' do
+    include_context 'with local KMS provider'
     let(:encrypted_ssn) { "ASzggCwAAAAAAAAAAAAAAAAC/OvUvE0N5eZ5vhjcILtGKZlxovGhYJduEfsR\n7NiH68FttXzHYqT0DKgvn3QjjTbS/4SPfBEYrMIS10Uzf9R1Ky4D5a19mYCp\nmv76Z8Rzdmo=\n" }
   end
 
-  shared_context 'with AWS KMS provider' do
-    let(:data_key) do
-      BSON::ExtJSON.parse(File.read('spec/mongo/crypt/data/key_document_aws.json'))
-    end
-
-    let(:kms_providers) do
-      {
-        aws: {
-          access_key_id: ENV['FLE_AWS_ACCESS_KEY'],
-          secret_access_key: ENV['FLE_AWS_SECRET_ACCESS_KEY']
-        }
-      }
-    end
-
-    let(:schema_map) { BSON::ExtJSON.parse(File.read('spec/mongo/crypt/data/schema_map_aws.json')) }
-    let(:encrypted_ssn) { "AXJ8fS5tr0ybsHekFF59rg0CHM2kEepvUpVQqlxP+Pfcxoeprc9ZHClSiRfJ\n4YtZnRm4xtDJxBQG1drHkENIBxt8sKMAhRk4uV2gV4oqHzkNHbCPKjVQ/oyR\nGmZHS82h5Pw=\n" }
+  shared_context 'with AWS KMS options' do
+    include_context 'with AWS KMS provider'
+    let(:encrypted_ssn) { "AQFkgAAAAAAAAAAAAAAAAAACX/YG2ZOHWU54kARE17zDdeZzKgpZffOXNaoB\njmvdVa/yTifOikvxEov16KxtQrnaKWdxQL03TVgpoLt4Jb28pqYKlgBj3XMp\nuItZpQeFQB4=\n" }
   end
 
   shared_context 'with jsonSchema validator' do
@@ -116,7 +97,7 @@ describe Mongo::Client do
     end
 
     context 'with local KMS provider' do
-      include_context 'with local KMS provider'
+      include_context 'with local KMS options'
 
       describe '#encrypt' do
         it 'replaces the ssn field with a BSON::Binary' do
@@ -134,7 +115,7 @@ describe Mongo::Client do
     end
 
     context 'with AWS KMS provider' do
-      include_context 'with AWS KMS provider'
+      include_context 'with AWS KMS options'
 
       describe '#encrypt' do
         it 'replaces the ssn field with a BSON::Binary' do
@@ -163,7 +144,7 @@ describe Mongo::Client do
     end
 
     context 'with local KMS provider' do
-      include_context 'with local KMS provider'
+      include_context 'with local KMS options'
 
       describe '#encrypt' do
         it 'replaces the ssn field with a BSON::Binary' do
@@ -181,7 +162,7 @@ describe Mongo::Client do
     end
 
     context 'with AWS KMS provider' do
-      include_context 'with AWS KMS provider'
+      include_context 'with AWS KMS options'
 
       describe '#encrypt' do
         it 'replaces the ssn field with a BSON::Binary' do
@@ -210,7 +191,7 @@ describe Mongo::Client do
     end
 
     context 'with local KMS provider' do
-      include_context 'with local KMS provider'
+      include_context 'with local KMS options'
 
       describe '#encrypt' do
         it 'does not perform encryption' do
@@ -228,7 +209,7 @@ describe Mongo::Client do
     end
 
     context 'with AWS KMS provider' do
-      include_context 'with AWS KMS provider'
+      include_context 'with AWS KMS options'
 
       describe '#encrypt' do
         it 'does not perform encryption' do

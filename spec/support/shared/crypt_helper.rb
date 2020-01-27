@@ -29,22 +29,26 @@ module CryptHelper
   shared_context 'with local KMS provider' do
     let(:kms_providers) { { local: local_kms_provider } }
     let(:kms_provider) { 'local' }
+
+    let(:data_key) do
+      BSON::ExtJSON.parse(File.read('spec/mongo/crypt/data/key_document_local.json'))
+    end
+
+    let(:schema_map) do
+      BSON::ExtJSON.parse(File.read('spec/mongo/crypt/data/schema_map_local.json'))
+    end
   end
 
   shared_context 'with AWS KMS provider' do
     let(:kms_providers) { { aws: aws_kms_provider } }
     let(:kms_provider) { 'aws' }
-  end
 
-  shared_context 'with local data key' do
-    let(:data_key) do
-      BSON::ExtJSON.parse(File.read('spec/mongo/crypt/data/key_document_local.json'))
-    end
-  end
-
-  shared_context 'with AWS data key' do
     let(:data_key) do
       BSON::ExtJSON.parse(File.read('spec/mongo/crypt/data/key_document_aws.json'))
+    end
+
+    let(:schema_map) do
+      BSON::ExtJSON.parse(File.read('spec/mongo/crypt/data/schema_map_aws.json'))
     end
   end
 end
