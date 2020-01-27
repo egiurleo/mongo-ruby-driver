@@ -75,14 +75,12 @@ describe 'Explicit Encryption' do
 
   shared_context 'with local KMS options' do
     include_context 'with local KMS provider'
-    include_context 'with local data key'
 
     let(:data_key_opts) { {} }
   end
 
   shared_context 'with AWS KMS options' do
     include_context 'with AWS KMS provider'
-    include_context 'with AWS data key'
 
     let(:data_key_opts) do
       {

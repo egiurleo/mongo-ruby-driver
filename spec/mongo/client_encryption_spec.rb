@@ -22,7 +22,6 @@ describe Mongo::ClientEncryption do
 
   shared_context 'local KMS provider' do
     include_context 'with local KMS provider'
-    include_context 'with local data key'
 
     let(:encrypted_value) do
       "ASzggCwAAAAAAAAAAAAAAAACk0TG2WPKVdChK2Oay9QTYNYHvplIMWjXWlnx\nAVC2hUway" +
@@ -32,7 +31,6 @@ describe Mongo::ClientEncryption do
 
   shared_context 'AWS KMS provider' do
     include_context 'with AWS KMS provider'
-    include_context 'with AWS data key'
 
     let(:encrypted_value) do
       "AQFkgAAAAAAAAAAAAAAAAAACqjx0+rWi18AIVwOm5VBLF1ga9Unvzo8QTAl1\niSa3k9J" +
