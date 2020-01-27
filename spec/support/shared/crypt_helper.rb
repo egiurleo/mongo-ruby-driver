@@ -28,10 +28,12 @@ module CryptHelper
 
   shared_context 'with local KMS provider' do
     let(:kms_providers) { { local: local_kms_provider } }
+    let(:kms_provider) { 'local' }
   end
 
   shared_context 'with AWS KMS provider' do
     let(:kms_providers) { { aws: aws_kms_provider } }
+    let(:kms_provider) { 'aws' }
   end
 
   shared_context 'with local data key' do
