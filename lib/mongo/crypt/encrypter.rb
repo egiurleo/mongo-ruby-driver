@@ -38,7 +38,7 @@ module Mongo
         validate_key_vault_client!
 
         @crypt_handle = Crypt::Handle.new(options[:kms_providers], schema_map: options[:schema_map])
-        @encryption_io = EncryptionIO.new(key_vault_collection: build_key_vault_collection)
+        @encryption_io = EncryptionIO.new(key_vault_collection: build_key_vault_collection, encrypter: self)
       end
 
       attr_reader :encryption_options

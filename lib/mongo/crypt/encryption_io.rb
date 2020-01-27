@@ -32,10 +32,11 @@ module Mongo
       #
       # @note This class expects that the key_vault_client and key_vault_namespace
       #   options are not nil and are in the correct format
-      def initialize(client: nil, mongocryptd_client: nil, key_vault_collection:)
+      def initialize(client: nil, mongocryptd_client: nil, encrypter:, key_vault_collection:)
         @client = client
         @mongocryptd_client = mongocryptd_client
         @key_vault_collection = key_vault_collection
+        @encrypter = encrypter
       end
 
       # Query for keys in the key vault collection using the provided
@@ -78,9 +79,9 @@ module Mongo
         begin
           response = @mongocryptd_client.database.command(cmd)
         rescue Error::NoServerAvailable => e
-          raise e if @client.encryption_options[:mongocryptd_bypass_spawn]
+          raise e if @encrypter.encryption_options[:mongocryptd_bypass_spawn]
 
-          @client.spawn_mongocryptd
+          @encrypter.spawn_mongocryptd
           response = @mongocryptd_client.database.command(cmd)
         end
 

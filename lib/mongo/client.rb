@@ -21,7 +21,6 @@ module Mongo
   class Client
     extend Forwardable
     include Loggable
-    include Crypt::AutoEncrypter
 
     # The options that do not affect the behavior of a cluster and its
     # subcomponents.
@@ -457,7 +456,10 @@ module Mongo
       remove_instance_variable('@monitoring')
 
       if @options[:auto_encryption_options]
-        set_auto_encryption_options
+        opts_copy = @options[:auto_encryption_options].dup
+        opts_copy[:extra_options][:mongocryptd_client_monitoring_io] = self.options[:monitoring_io]
+
+        @encrypter = Crypt::AutoEncrypter(self, opts_copy)
       end
 
       yield(self) if block_given?
@@ -664,11 +666,11 @@ module Mongo
         # from doing any further auto-encryption by cleaning up the resources related to
         # auto-encryption.
         if @options.key?(:auto_encryption_options) && @options[:auto_encryption_options].nil?
-          teardown_encrypter
+          @auto_encrypter.teardown_encrypter if @auto_encrypter
         end
 
         if @options[:auto_encryption_options]
-          set_auto_encryption_options
+          # set_auto_encryption_options
         end
       end
     end
@@ -708,7 +710,7 @@ module Mongo
       @connect_lock.synchronize do
         @cluster.disconnect!
       end
-      teardown_encrypter
+      @auto_encrypter.teardown_encrypter if @auto_encrypter
       true
     end
 
@@ -867,17 +869,6 @@ module Mongo
         default_options[:retry_reads] = true
         default_options[:retry_writes] = true
       end
-    end
-
-    # Provides some default encryption options and sets up data necessary
-    # for auto-encryption
-    def set_auto_encryption_options
-      opts_copy = @options[:auto_encryption_options].dup
-
-      opts_copy[:extra_options] ||= {}
-      opts_copy[:extra_options][:mongocryptd_client_monitoring_io] = self.options[:monitoring_io]
-
-      setup_encrypter(opts_copy)
     end
 
     # If options[:session] is set, validates that session and returns it.

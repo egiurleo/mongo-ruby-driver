@@ -18,7 +18,7 @@ module Mongo
     # A module that encapsulates auto-encryption functionality
     #
     # @api private
-    module AutoEncrypter
+    class AutoEncrypter < Encrypter
 
       attr_reader :mongocryptd_client
       attr_reader :key_vault_client
@@ -50,7 +50,7 @@ module Mongo
       #
       # @raise [ ArgumentError ] If required options are missing or incorrectly
       #   formatted.
-      def setup_encrypter(options = {})
+      def initialize(client, options = {})
         opts = set_default_options(options.dup)
 
         unless opts[:key_vault_client]
@@ -58,7 +58,7 @@ module Mongo
           # Mongo::Client used for encryption. Update options so that key vault
           # client does not perform auto-encryption/decryption, and keep a reference
           # to it so it is destroyed later.
-          @key_vault_client = self.with({ auto_encryption_options: nil })
+          @key_vault_client = client.with({ auto_encryption_options: nil })
 
           opts[:key_vault_client] = @key_vault_client
         end
@@ -69,10 +69,11 @@ module Mongo
 
         super(opts)
 
+        @client = client
         @mongocryptd_client = Client.new(
-                                @encryption_options[:mongocryptd_uri],
+                                @encryption_options['mongocryptd_uri'],
                                 monitoring_io: mongocryptd_client_monitoring_io,
-                                server_selection_timeout: mongocryptd_server_selection_timeout, # For testing purposes
+                                server_selection_timeout: 1,
                               )
 
         # Tests fail with live background threads if the @mongocryptd client is not closed at the
@@ -81,9 +82,10 @@ module Mongo
         ClientRegistry.instance.register_local_client(@mongocryptd_client) if defined?(ClientRegistry)
 
         @encryption_io = EncryptionIO.new(
-                          client: self,
+                          client: client,
                           mongocryptd_client: @mongocryptd_client,
-                          key_vault_collection: build_key_vault_collection
+                          key_vault_collection: build_key_vault_collection,
+                          encrypter: self
                          )
       end
 
@@ -133,10 +135,10 @@ module Mongo
           raise ArgumentError.new('Cannot spawn mongocryptd process without setting auto encryption options on the client.')
         end
 
-        mongocryptd_spawn_args = @encryption_options[:mongocryptd_spawn_args]
+        mongocryptd_spawn_args = @encryption_options['mongocryptd_spawn_args']
 
         Process.spawn(
-          @encryption_options[:mongocryptd_spawn_path],
+          @encryption_options['mongocryptd_spawn_path'],
           *mongocryptd_spawn_args,
           [:out, :err]=>'/dev/null'
         )
@@ -166,7 +168,7 @@ module Mongo
       def set_default_options(options)
         opts = options.dup
 
-        extra_options = opts.delete(:extra_options)
+        extra_options = opts.delete(:extra_options) || {}
         extra_options = DEFAULT_EXTRA_OPTIONS.merge(extra_options)
 
         has_timeout_string_arg = extra_options[:mongocryptd_spawn_args].any? do |elem|
