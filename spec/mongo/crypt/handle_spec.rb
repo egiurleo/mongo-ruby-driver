@@ -1,7 +1,7 @@
 require 'mongo'
 require 'base64'
 require 'support/lite_constraints'
-require 'support/crypt_helper'
+require 'support/shared/crypt_helper'
 
 RSpec.configure do |config|
   config.extend(LiteConstraints)

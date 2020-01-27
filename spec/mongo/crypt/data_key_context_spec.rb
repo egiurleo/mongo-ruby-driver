@@ -1,9 +1,11 @@
 require 'mongo'
-require 'support/lite_constraints'
 require 'base64'
+require 'support/lite_constraints'
+require 'support/shared/crypt_helper'
 
 RSpec.configure do |config|
   config.extend(LiteConstraints)
+  config.include(CryptHelper)
 end
 
 describe Mongo::Crypt::DataKeyContext do
@@ -12,11 +14,8 @@ describe Mongo::Crypt::DataKeyContext do
   let(:mongocrypt) do
     Mongo::Crypt::Handle.new(
       {
-        local: { key: Base64.encode64("ru\xfe\x00" * 24) },
-        aws: {
-          access_key_id: ENV['FLE_AWS_KEY'],
-          secret_access_key: ENV['FLE_AWS_SECRET']
-        }
+        local: local_kms_provider,
+        aws: aws_kms_provider
       }
     )
   end

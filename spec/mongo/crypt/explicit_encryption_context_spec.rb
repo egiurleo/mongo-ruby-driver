@@ -1,8 +1,10 @@
 require 'mongo'
 require 'support/lite_constraints'
+require 'support/shared/crypt_helper'
 
 RSpec.configure do |config|
   config.extend(LiteConstraints)
+  config.include(CryptHelper)
 end
 
 describe Mongo::Crypt::ExplicitEncryptionContext do
@@ -10,19 +12,9 @@ describe Mongo::Crypt::ExplicitEncryptionContext do
 
   let(:mongocrypt) { Mongo::Crypt::Handle.new(kms_providers, logger: logger) }
   let(:context) { described_class.new(mongocrypt, io, value, options) }
-
   let(:logger) { nil }
-  let(:kms_providers) do
-    {
-      local: {
-        key: Base64.encode64("ru\xfe\x00" * 24)
-      }
-    }
-  end
-
   let(:io) { double("Mongo::ClientEncryption::IO") }
   let(:value) { { 'v': 'Hello, world!' } }
-
   let(:algorithm) { 'AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic' }
   let(:key_id) { "]\xB1\xE1>\xD6\x85G\xCA\xBB\xA3`\e4\x06\xDA\x89" }
 
@@ -32,6 +24,8 @@ describe Mongo::Crypt::ExplicitEncryptionContext do
       algorithm: algorithm
     }
   end
+
+  include_context 'with local KMS provider'
 
   describe '#initialize' do
     context 'with nil key_id option' do
@@ -84,14 +78,7 @@ describe Mongo::Crypt::ExplicitEncryptionContext do
       end
 
       context 'when mongocrypt is initialized with AWS KMS provider options' do
-        let(:kms_providers) do
-          {
-            aws: {
-              access_key_id: ENV['FLE_AWS_ACCESS_KEY'],
-              secret_access_key: ENV['FLE_AWS_SECRET_ACCESS_KEY']
-            }
-          }
-        end
+        include_context 'with AWS KMS provider'
 
         it 'initializes context' do
           expect do

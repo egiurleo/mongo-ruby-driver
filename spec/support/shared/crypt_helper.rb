@@ -8,13 +8,13 @@ module CryptHelper
         secret_access_key: ENV['FLE_AWS_SECRET']
       }
     end
+  end
 
-    shared_context 'with local KMS provider' do
-      let(:kms_providers) { { local: local_kms_provider } }
-    end
+  shared_context 'with local KMS provider' do
+    let(:kms_providers) { { local: local_kms_provider } }
+  end
 
-    shared_context 'with AWS KMS provider' do
-      let(:kms_providers) { { aws: aws_kms_provider } }
-    end
+  shared_context 'with AWS KMS provider' do
+    let(:kms_providers) { { aws: aws_kms_provider } }
   end
 end

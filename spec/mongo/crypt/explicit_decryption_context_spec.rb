@@ -1,8 +1,10 @@
 require 'mongo'
 require 'support/lite_constraints'
+require 'support/shared/crypt_helper'
 
 RSpec.configure do |config|
   config.extend(LiteConstraints)
+  config.include(CryptHelper)
 end
 
 describe Mongo::Crypt::ExplicitDecryptionContext do
@@ -11,15 +13,6 @@ describe Mongo::Crypt::ExplicitDecryptionContext do
   let(:mongocrypt) { Mongo::Crypt::Handle.new(kms_providers, logger: logger) }
   let(:context) { described_class.new(mongocrypt, io, value) }
   let(:logger) { nil }
-
-  let(:kms_providers) do
-    {
-      local: {
-        key: Base64.encode64("ru\xfe\x00" * 24)
-      }
-    }
-  end
-
   let(:io) { double("Mongo::ClientEncryption::IO") }
 
   # A binary string representing a value previously encrypted by libmongocrypt
@@ -31,6 +24,8 @@ describe Mongo::Crypt::ExplicitDecryptionContext do
     { 'v': BSON::Binary.new(encrypted_data, :ciphertext) }
   end
 
+  include_context 'with local KMS provider'
+
   describe '#initialize' do
     context 'when mongocrypt is initialized with local KMS provider options' do
       it 'initializes context' do
@@ -41,14 +36,7 @@ describe Mongo::Crypt::ExplicitDecryptionContext do
     end
 
     context 'when mongocrypt is initialized with AWS KMS provider options' do
-      let(:kms_providers) do
-        {
-          aws: {
-            access_key_id: ENV['FLE_AWS_ACCESS_KEY'],
-            secret_access_key: ENV['FLE_AWS_SECRET_ACCESS_KEY']
-          }
-        }
-      end
+      include_context 'with AWS KMS provider'
 
       it 'initializes context' do
         expect do
