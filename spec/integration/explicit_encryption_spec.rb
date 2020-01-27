@@ -8,7 +8,7 @@ end
 describe 'Explicit Encryption' do
   require_libmongocrypt
 
-  let(:client) { ClientRegistry.instance.new_local_client(SpecConfig.instance.addresses) }
+  let(:client) { authorized_client }
   let(:key_vault_namespace) { 'test.keys' }
   let(:data_key_id) { data_key['_id'].data }
 
@@ -26,17 +26,27 @@ describe 'Explicit Encryption' do
     }
   end
 
+  before do
+    client.use(:test)[:keys].drop
+  end
+
   shared_examples_for 'it can create a data key' do
     it 'creates a data key' do
       data_key_id = client_encryption.create_data_key(kms_provider, data_key_opts)
       expect(data_key_id).to be_a_kind_of(String)
       expect(data_key_id.bytesize).to eq(16)
+
+      num_data_keys = authorized_client
+        .use(:test)[:keys]
+        .find(_id: BSON::Binary.new(data_key_id, :uuid))
+        .count
+
+      expect(num_data_keys).to eq(1)
     end
   end
 
   shared_examples_for 'it can encrypt/decrypt' do
     before do
-      authorized_client.use(:test)[:keys].drop
       authorized_client.use(:test)[:keys].insert_one(data_key)
     end
 
