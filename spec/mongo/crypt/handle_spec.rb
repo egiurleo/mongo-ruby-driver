@@ -1,9 +1,11 @@
 require 'mongo'
 require 'base64'
 require 'support/lite_constraints'
+require 'support/crypt_helper'
 
 RSpec.configure do |config|
   config.extend(LiteConstraints)
+  config.extend(CryptHelper)
 end
 
 describe Mongo::Crypt::Handle do
@@ -11,14 +13,6 @@ describe Mongo::Crypt::Handle do
 
   describe '#initialize' do
     let(:handle) { described_class.new(kms_providers, schema_map: schema_map) }
-
-    let(:kms_providers) do
-      {
-        local: {
-          key: Base64.encode64("ru\xfe\x00" * 24)
-        }
-      }
-    end
 
     let(:schema_map) do
       {
@@ -90,25 +84,29 @@ describe Mongo::Crypt::Handle do
       end
     end
 
-    context 'with invalid schema map' do
-      let(:schema_map) { '' }
+    context 'with valid local kms_providers' do
+      include_context 'with local KMS provider'
 
-      it 'raises an exception' do
-        expect { handle }.to raise_error(ArgumentError, /schema_map must be a Hash or nil/)
-      end
-    end
-
-    context 'with valid local kms_providers and schema map' do
-      let(:kms_providers) do
-        {
-          local: {
-            key: Base64.encode64("ru\xfe\x00" * 24)
-          }
-        }
+      context 'with valid schema map' do
+        it 'does not raise an exception' do
+          expect { handle }.not_to raise_error
+        end
       end
 
-      it 'does not raise an exception' do
-        expect { handle }.not_to raise_error
+      context 'with invalid schema map' do
+        let(:schema_map) { '' }
+
+        it 'raises an exception' do
+          expect { handle }.to raise_error(ArgumentError, /schema_map must be a Hash or nil/)
+        end
+      end
+
+      context 'with nil schema map' do
+        let(:schema_map) { nil }
+
+        it 'does not raise an exception' do
+          expect { handle }.not_to raise_error
+        end
       end
     end
 
@@ -210,25 +208,28 @@ describe Mongo::Crypt::Handle do
     end
 
     context 'with valid AWS kms_providers and schema map' do
-      let(:kms_providers) do
-        {
-          aws: {
-            access_key_id: ENV['FLE_AWS_KEY'],
-            secret_access_key: ENV['FLE_AWS_SECRET']
-          }
-        }
+      include_context 'with AWS KMS provider'
+
+      context 'with valid schema map' do
+        it 'does not raise an exception' do
+          expect { handle }.not_to raise_error
+        end
       end
 
-      it 'does not raise an exception' do
-        expect { handle }.not_to raise_error
+      context 'with invalid schema map' do
+        let(:schema_map) { '' }
+
+        it 'raises an exception' do
+          expect { handle }.to raise_error(ArgumentError, /schema_map must be a Hash or nil/)
+        end
       end
-    end
 
-    context 'with nil schema map' do
-      let(:schema_map) { nil }
+      context 'with nil schema map' do
+        let(:schema_map) { nil }
 
-      it 'does not raise an exception' do
-        expect { handle }.not_to raise_error
+        it 'does not raise an exception' do
+          expect { handle }.not_to raise_error
+        end
       end
     end
   end
