@@ -86,7 +86,25 @@ module Utils
   def convert_client_options(spec_test_options)
     uri = Mongo::URI.new('mongodb://localhost')
     spec_test_options.reduce({}) do |opts, (name, value)|
-      uri.send(:add_uri_option, name, value.to_s, opts)
+      if name == 'autoEncryptOpts'
+        opts.merge!(
+          auto_encryption_options: Utils.snakeize_hash(value)
+        )
+
+        if opts[:auto_encryption_options][:kms_providers][:aws]
+          opts[:auto_encryption_options][:kms_providers][:aws] = {
+            access_key_id: SpecConfig.instance.fle_aws_key,
+            secret_access_key: SpecConfig.instance.fle_aws_secret,
+          }
+        end
+
+        if opts[:auto_encryption_options] && opts[:auto_encryption_options][:key_vault_namespace].nil?
+          opts[:auto_encryption_options][:key_vault_namespace] = 'admin.datakeys'
+        end
+      else
+        uri.send(:add_uri_option, name, value.to_s, opts)
+      end
+
       opts
     end
   end
