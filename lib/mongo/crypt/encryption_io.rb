@@ -51,7 +51,9 @@ module Mongo
       )
         @client = client
         @mongocryptd_client = mongocryptd_client
-        @key_vault_collection = key_vault_collection(key_vault_namespace, key_vault_client)
+        @key_vault_client = key_vault_client
+        @key_vault_db, @key_vault_coll = key_vault_namespace.split('.')
+        # @key_vault_collection = key_vault_collection(key_vault_namespace, key_vault_client)
         @options = mongocryptd_options
       end
 
@@ -62,7 +64,12 @@ module Mongo
       #
       # @return [ Array<BSON::Document> ] The query results
       def find_keys(filter)
-        @key_vault_collection.find(filter).to_a
+        key_vault_collection = @key_vault_client.with(
+          read_concern: { level: :majority },
+          database: @key_vault_db
+        )[@key_vault_coll]
+
+        key_vault_collection.find(filter).to_a
       end
 
       # Insert a document into the key vault collection
@@ -71,7 +78,8 @@ module Mongo
       #
       # @return [ Mongo::Operation::Insert::Result ] The insertion result
       def insert_data_key(document)
-        @key_vault_collection.insert_one(document)
+        key_vault_collection = @key_vault_client.use(@key_vault_db)[@key_vault_coll]
+        key_vault_collection.insert_one(document)
       end
 
       # Get collection info for a collection matching the provided filter

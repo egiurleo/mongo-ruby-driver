@@ -41,3 +41,34 @@ RSpec::Matchers.define :be_ciphertext do
     object.is_a?(BSON::Binary) && object.type == :ciphertext
   end
 end
+
+def match?(obj1, obj2)
+  if obj1.is_a?(Hash) && obj2.is_a?(Hash)
+    obj1.keys.all? do |key|
+      match?(obj1[key], obj2[key])
+    end
+  elsif obj1.is_a?(Array) && obj2.is_a?(Array)
+    obj1.map.with_index do |el, idx|
+      match?(obj1[idx], obj2[idx])
+    end.all?(true)
+  elsif obj1.is_a?(Hash)
+    return false unless obj1.key?('$$type')
+
+    expected_class = case obj1['$$type']
+    when 'binData'
+      BSON::Binary
+    else
+      raise "Must implement logic for #{v['$$type']}"
+    end
+
+    return obj2.is_a?(expected_class)
+  else
+    return obj1 == obj2
+  end
+end
+
+RSpec::Matchers.define :match_event do |event|
+  match do |actual|
+    match?(event, actual)
+  end
+end
