@@ -80,7 +80,7 @@ EOT
         expect(expected_events.length).to be > i
         expect(actual_events.length).to be > i
 
-        expectation = BSON::ExtJSON.parse_obj(expected_events[i])
+        expectation = BSON::ExtJSON.parse_obj(expected_events[i], mode: :bson)
         actual_event = actual_events[i]['command_started_event'].dup
 
         expect(expectation.keys).to eq(%w(command_started_event))

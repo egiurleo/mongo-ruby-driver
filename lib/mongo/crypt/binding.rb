@@ -286,7 +286,7 @@ module Mongo
       #
       # @raise [ Mongo::Error::CryptError ] If the option is not set successfully
       def self.setopt_kms_provider_local(handle, raw_master_key)
-        Binary.wrap_string(raw_master_key) do |master_key_p|
+        Binary.wrap_string(raw_master_key.data) do |master_key_p|
           check_status(handle) do
             mongocrypt_setopt_kms_provider_local(handle.ref, master_key_p)
           end

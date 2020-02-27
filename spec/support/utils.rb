@@ -87,6 +87,8 @@ module Utils
     uri = Mongo::URI.new('mongodb://localhost')
     spec_test_options.reduce({}) do |opts, (name, value)|
       if name == 'autoEncryptOpts'
+        local_kms_providers = value['kmsProviders']['local']
+
         opts.merge!(
           auto_encryption_options: Utils.snakeize_hash(value)
         )
@@ -96,6 +98,11 @@ module Utils
             access_key_id: SpecConfig.instance.fle_aws_key,
             secret_access_key: SpecConfig.instance.fle_aws_secret,
           }
+        end
+
+        if opts[:auto_encryption_options][:kms_providers][:local]
+          opts[:auto_encryption_options][:kms_providers][:local] =
+            BSON::ExtJSON.parse_obj(local_kms_providers)
         end
 
         if opts[:auto_encryption_options] && opts[:auto_encryption_options][:key_vault_namespace].nil?

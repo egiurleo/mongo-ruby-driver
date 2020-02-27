@@ -247,7 +247,7 @@ module Mongo
     # Validate and set the local KMS provider information on the underlying
       # mongocrypt_t object and raise an exception if the operation fails
       def set_kms_providers_local(kms_providers)
-        unless kms_providers[:local][:key] && kms_providers[:local][:key].is_a?(String)
+        unless kms_providers[:local][:key] #&& kms_providers[:local][:key].is_a?(String)
           raise ArgumentError.new(
             "The specified local kms_providers option is invalid: " +
             "#{kms_providers[:local]}. kms_providers with :local key must be " +
@@ -256,9 +256,9 @@ module Mongo
         end
 
         master_key = kms_providers[:local][:key]
-        raw_master_key = Base64.decode64(master_key)
+        # raw_master_key = Base64.decode64(master_key)
 
-        Binding.setopt_kms_provider_local(self, raw_master_key)
+        Binding.setopt_kms_provider_local(self, master_key)
       end
 
       # Validate and set the aws KMS provider information on the underlying
