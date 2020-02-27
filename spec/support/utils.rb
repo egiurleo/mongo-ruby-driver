@@ -107,6 +107,8 @@ module Utils
 
         if opts[:auto_encryption_options] && opts[:auto_encryption_options][:key_vault_namespace].nil?
           opts[:auto_encryption_options][:key_vault_namespace] = 'admin.datakeys'
+        else
+          opts[:auto_encryption_options][:key_vault_namespace] = opts[:auto_encryption_options][:key_vault_namespace].to_s
         end
       else
         uri.send(:add_uri_option, name, value.to_s, opts)

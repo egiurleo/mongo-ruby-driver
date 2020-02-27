@@ -23,5 +23,14 @@ describe 'Client-Side Encryption' do
     'spec/spec_tests/data/client_side_encryption/insert.yml',
     'spec/spec_tests/data/client_side_encryption/keyAltName.yml',
     'spec/spec_tests/data/client_side_encryption/localKMS.yml',
+    # 'spec/spec_tests/data/client_side_encryption/localSchema.yml',
+    # 'spec/spec_tests/data/client_side_encryption/malformedCiphertext.yml',
+    'spec/spec_tests/data/client_side_encryption/maxWireVersion.yml',
+    'spec/spec_tests/data/client_side_encryption/missingKey.yml',
+    'spec/spec_tests/data/client_side_encryption/replaceOne.yml',
+    # 'spec/spec_tests/data/client_side_encryption/types.yml',
+    'spec/spec_tests/data/client_side_encryption/unsupportedCommand.yml',
+    'spec/spec_tests/data/client_side_encryption/updateMany.yml',
+    # 'spec/spec_tests/data/client_side_encryption/updateOne.yml',
   ])
 end
