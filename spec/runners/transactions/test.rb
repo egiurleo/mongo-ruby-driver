@@ -176,8 +176,8 @@ module Mongo
 
         @results = {
           results: results,
-          contents: @collection.with(
-          read: {mode: 'primary'},
+          contents: @result_collection.with(
+            read: {mode: 'primary'},
             read_concern: { level: 'local' },
           ).find.to_a,
           events: actual_events,

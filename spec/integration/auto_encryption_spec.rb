@@ -240,7 +240,8 @@ describe 'Auto Encryption' do
     shared_examples 'it performs an encrypted command' do
       include_context 'encrypted document in collection'
 
-      let(:result) { encryption_client[:users].find(ssn: ssn).first }
+      # let(:result) { encryption_client[:users].find(ssn: ssn).first }
+      let(:result) { encryption_client[:users].find( { "$where": BSON::Code.new("function() { return true }")} ).first }
 
       it 'encrypts the command and decrypts the response' do
         result.should_not be_nil
