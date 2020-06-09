@@ -29,7 +29,7 @@ require 'zlib'
 
 autoload :CGI, 'cgi'
 
-require 'bson'
+# require 'bson'
 
 require 'mongo/id'
 require 'mongo/bson'

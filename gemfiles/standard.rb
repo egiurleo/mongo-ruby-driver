@@ -21,6 +21,7 @@ def standard_dependencies
     gem 'aws-sdk-ecs'
     gem 'aws-sdk-iam'
     gem 'paint'
+    gem 'bson', github: 'egiurleo/bson-ruby', branch: 'fix-segfaults'
 
     # for benchmark tests
     gem 'yajl-ruby', platforms: :mri, require: false
