@@ -83,6 +83,16 @@ module Mongo
         @request_id = message.request_id
       end
 
+      def compressor
+        @compressor ||= if @compressor_id == NOOP_BYTE
+          Mongo::Protocol::Compressor::Noop.new
+        elsif @compressor_id == ZLIB_BYTE
+          Mongo::Protocol::Compressor::Zlib.new(@zlib_compression_level)
+        elsif @compressor_id == SNAPPY_BYTE
+          Mongo::Protocol::Compressor::Snappy.new
+        end
+      end
+
       # Inflates an OP_COMRESSED message and returns the original message.
       #
       # @return [ Protocol::Message ] The inflated message.
@@ -151,23 +161,11 @@ module Mongo
       end
 
       def compress(buffer)
-        if @compressor_id == NOOP_BYTE
-          buffer.to_s.force_encoding(BSON::BINARY)
-        elsif @compressor_id == ZLIB_BYTE
-          Zlib::Deflate.deflate(buffer.to_s, @zlib_compression_level).force_encoding(BSON::BINARY)
-        elsif @compressor_id == SNAPPY_BYTE
-          Snappy.deflate(buffer.to_s).force_encoding(BSON::BINARY)
-        end
+        compressor.compress(buffer)
       end
 
       def decompress(compressed_message)
-        if @compressor_id == NOOP_BYTE
-          BSON::ByteBuffer.new(compressed_message)
-        elsif @compressor_id == ZLIB_BYTE
-          BSON::ByteBuffer.new(Zlib::Inflate.inflate(compressed_message))
-        elsif @compressor_id == SNAPPY_BYTE
-          BSON::ByteBuffer.new(Snappy.inflate(compressed_message))
-        end
+        compressor.decompress(compressed_message)
       end
 
       Registry.register(OP_CODE, self)

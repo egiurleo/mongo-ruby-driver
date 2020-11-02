@@ -512,7 +512,7 @@ describe Mongo::Client do
           end
 
           context 'when one supported compressor and one unsupported compressor are provided' do
-            require_compression
+            require_zlib_compression
             min_server_fcv '3.6'
 
             let(:options) do
@@ -566,7 +566,7 @@ describe Mongo::Client do
       end
 
       context 'when a zlib_compression_level option is provided' do
-        require_compression
+        require_zlib_compression
         min_server_fcv '3.6'
 
         let(:client) do

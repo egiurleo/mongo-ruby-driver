@@ -6,6 +6,7 @@ require 'mongo/protocol/message'
 
 # Client Requests
 require 'mongo/protocol/compressed'
+require 'mongo/protocol/compressor'
 require 'mongo/protocol/delete'
 require 'mongo/protocol/get_more'
 require 'mongo/protocol/insert'
