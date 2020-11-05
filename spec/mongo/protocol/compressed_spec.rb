@@ -1,4 +1,4 @@
-require 'lite_spec_helper'
+require 'spec_helper'
 
 describe Mongo::Protocol::Compressed do
 
